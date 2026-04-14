@@ -5,22 +5,35 @@
 
 ---
 
-## How This Works (Read This First)
+## The Demo (Plain English)
 
-One Python Script node in Dynamo does everything:
+1. Open the Hospital HVAC model in Revit 2026
+2. Open Dynamo
+3. Drag a **Python Script** node onto the canvas
+4. Right-click it → **Engine → CPython3**
+5. Double-click it, paste `orphanx_all_in_one.py` from our GitHub
+6. Click **Run**
+7. Wait 30-60 seconds
 
-1. Reads every pipe, duct, and fitting from the Revit model
-2. Finds orphaned elements not connected to any system
-3. Sends data to our AI server (Claude analyzes for dead legs, code violations, patient safety)
-4. Colors elements in the model by severity
+**What happens during those 60 seconds:**
+- The script reads the Revit model — finds ~1,100 systems, ~18,000 elements
+- It identifies which elements aren't connected to any system (orphans)
+- It connects over the internet to orphanx.chrisfrance.ai
+- Claude reads the full system topology and finds dead legs, code violations, safety risks
+- The script takes those findings and paints elements in the model
 
-```
-[Python Script Node]
-  ↓ Reads Revit model
-  ↓ Sends to AI server
-  ↓ Colors elements
-[Done — switch to 3D view]
-```
+8. Connect a **Watch** node to see the log — systems found, orphans, AI findings with severity and code references
+9. Switch to the **"Orphan X - QA Audit"** 3D view in Revit
+10. The model is now color-coded:
+    - **RED** = pipes that could kill patients (dead legs → Legionella, disconnected sprinklers)
+    - **ORANGE** = code violations (missing vents)
+    - **YELLOW** = major issues
+    - **CYAN** = minor issues
+    - **GRAY** = unclassified orphans
+
+**One paste. One click. One view. That's the demo.**
+
+**The presentation story:** "A mechanical engineer would take 3 days to audit this hospital's MEP systems. We did it in 60 seconds. And we found the dead leg on floor 2 that could cause Legionnaires' disease."
 
 ---
 
