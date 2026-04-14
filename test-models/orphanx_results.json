@@ -1,0 +1,13 @@
+{
+  "summary": {
+    "systems_found": 1119,
+    "total_elements": 0,
+    "orphaned_elements": 740,
+    "ai_findings": 0,
+    "orphan_classifications": 0,
+    "overrides_applied": 0
+  },
+  "audit_findings": [],
+  "orphan_classifications": [],
+  "extraction_errors": []
+}

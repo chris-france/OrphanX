@@ -97,13 +97,34 @@ def parse_json_response(text):
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        if "```json" in text:
-            json_str = text.split("```json")[1].split("```")[0].strip()
+        pass
+    if "```json" in text:
+        json_str = text.split("```json")[1].split("```")[0].strip()
+        try:
             return json.loads(json_str)
-        if "```" in text:
-            json_str = text.split("```")[1].split("```")[0].strip()
+        except json.JSONDecodeError:
+            pass
+    if "```" in text:
+        json_str = text.split("```")[1].split("```")[0].strip()
+        try:
             return json.loads(json_str)
-        raise
+        except json.JSONDecodeError:
+            pass
+    import re
+    match = re.search(r'\{[\s\S]*\}', text)
+    if match:
+        try:
+            return json.loads(match.group())
+        except json.JSONDecodeError:
+            pass
+    match = re.search(r'\[[\s\S]*\]', text)
+    if match:
+        try:
+            result = json.loads(match.group())
+            return {"findings": result} if isinstance(result, list) else result
+        except json.JSONDecodeError:
+            pass
+    raise ValueError("Could not parse JSON from response: {}...".format(text[:200]))
 
 
 def main():
