@@ -47,6 +47,7 @@ from Autodesk.Revit.DB import (
     ViewFamily,
     FillPatternElement,
     XYZ,
+    ViewDetailLevel,
 )
 try:
     from Autodesk.Revit.DB import DisplayStyle
@@ -119,13 +120,20 @@ def _get_family_name(elem):
                 return n
     except Exception:
         pass
-    # Try BuiltInParameter (most reliable fallback)
+    # Try BuiltInParameter
     try:
         p = elem.get_Parameter(BuiltInParameter.ELEM_FAMILY_PARAM)
         if p:
             n = p.AsValueString()
             if n:
                 return n
+    except Exception:
+        pass
+    # Nuclear fallback: elem.Name often contains family:type info
+    try:
+        n = str(elem.Name)
+        if n:
+            return n
     except Exception:
         pass
     return "Unknown"
@@ -145,6 +153,13 @@ def _get_type_name(elem):
             n = p.AsValueString()
             if n:
                 return n
+    except Exception:
+        pass
+    # Nuclear fallback
+    try:
+        n = str(elem.Name)
+        if n:
+            return n
     except Exception:
         pass
     return "Unknown"
@@ -396,6 +411,7 @@ _MEP_CATS = [
     BuiltInCategory.OST_DuctTerminal, BuiltInCategory.OST_DuctCurves,
     BuiltInCategory.OST_DuctFitting, BuiltInCategory.OST_FlexDuctCurves,
     BuiltInCategory.OST_PipeCurves, BuiltInCategory.OST_PipeFitting,
+    BuiltInCategory.OST_PipeAccessory, BuiltInCategory.OST_DuctAccessory,
     BuiltInCategory.OST_FlexPipeCurves, BuiltInCategory.OST_PipeSegments,
     BuiltInCategory.OST_MechanicalEquipment, BuiltInCategory.OST_PlumbingFixtures,
     BuiltInCategory.OST_Sprinklers, BuiltInCategory.OST_ElectricalEquipment,
@@ -777,12 +793,13 @@ for s in systems_out:
     system_id_to_elements[str(s["system_id"])] = elem_ids
     cat_counts = {}
     cap_count = 0
+    _CAP_KEYWORDS = ("cap", "plug", "blind", "dead end", "test tee", "stub", "capped", "endcap")
     for e in s["elements"]:
         cat = e.get("category", "Unknown")
         cat_counts[cat] = cat_counts.get(cat, 0) + 1
         fam_lower = e.get("family", "").lower()
         type_lower = e.get("type", "").lower()
-        if any(kw in fam_lower or kw in type_lower for kw in ("cap", "plug", "blind", "end cap", "test cap")):
+        if any(kw in fam_lower or kw in type_lower for kw in _CAP_KEYWORDS):
             cap_count += 1
     total_caps += cap_count
     summary = {
@@ -793,18 +810,26 @@ for s in systems_out:
     if cap_count > 0:
         summary["caps_plugs"] = cap_count
     pipe_summaries.append(summary)
-# Debug: show unique families so we know if extraction is working
+# Debug: show unique families — especially pipe fittings (where caps live)
 all_families = set()
+fitting_families = set()
 for s in systems_out:
     for e in s.get("elements", []):
         f = e.get("family", "Unknown")
+        t = e.get("type", "Unknown")
         if f != "Unknown":
             all_families.add(f)
+        if e.get("category", "") in ("Pipe Fittings", "Pipe Accessories"):
+            fitting_families.add("{} : {}".format(f, t))
 if all_families:
-    sample = sorted(all_families)[:15]
-    log("  Sample families found: {}".format(", ".join(sample)))
+    sample = sorted(all_families)[:10]
+    log("  Sample families: {}".format(", ".join(sample)))
 else:
     log("  WARNING: All families are 'Unknown' — cap detection won't work")
+if fitting_families:
+    log("  Pipe fitting families: {}".format(", ".join(sorted(fitting_families)[:10])))
+else:
+    log("  No pipe fitting families found — caps may not be categorized as Pipe Fittings")
 log("  {} piping systems, {} total caps/plugs detected".format(len(pipe_summaries), total_caps))
 if pipe_summaries:
     log("  Auditing {} piping systems (summary mode)...".format(len(pipe_summaries)))
@@ -990,13 +1015,18 @@ try:
         except Exception:
             pass
 
-        # Set view to Shaded so color overrides are visible
+        # Set view to Shaded + Fine detail so color overrides persist at ALL zoom levels
         try:
             if DisplayStyle is not None:
                 qa_view.DisplayStyle = DisplayStyle.ShadingWithEdges
                 log("  View set to ShadingWithEdges")
         except Exception as ex:
             log("  Set view to Shaded manually if colors don't show: {}".format(str(ex)))
+        try:
+            qa_view.DetailLevel = ViewDetailLevel.Fine
+            log("  View detail level set to Fine")
+        except Exception as ex:
+            log("  Could not set detail level: {}".format(str(ex)))
 
         # Get solid fill pattern
         solid_fill_id = None
@@ -1010,20 +1040,46 @@ try:
         except Exception:
             pass
 
+        # Helper: build override settings that work at ALL zoom levels
+        def _build_ogs(color, line_weight, halftone):
+            ogs = OverrideGraphicSettings()
+            # Lines (visible at all zoom levels)
+            ogs.SetProjectionLineColor(color)
+            ogs.SetCutLineColor(color)
+            ogs.SetProjectionLineWeight(line_weight)
+            ogs.SetCutLineWeight(line_weight)
+            # Surface FOREGROUND pattern (the fill)
+            ogs.SetSurfaceForegroundPatternColor(color)
+            if solid_fill_id:
+                ogs.SetSurfaceForegroundPatternId(solid_fill_id)
+            # Surface BACKGROUND pattern (covers what foreground doesn't)
+            try:
+                ogs.SetSurfaceBackgroundPatternColor(color)
+                if solid_fill_id:
+                    ogs.SetSurfaceBackgroundPatternId(solid_fill_id)
+            except Exception:
+                pass
+            # Cut patterns (for section views)
+            ogs.SetCutForegroundPatternColor(color)
+            if solid_fill_id:
+                ogs.SetCutForegroundPatternId(solid_fill_id)
+            try:
+                ogs.SetCutBackgroundPatternColor(color)
+                if solid_fill_id:
+                    ogs.SetCutBackgroundPatternId(solid_fill_id)
+            except Exception:
+                pass
+            # Transparency and halftone
+            try:
+                ogs.SetSurfaceTransparency(0)
+            except Exception:
+                pass
+            ogs.SetHalftone(halftone)
+            return ogs
+
         # STEP 1: Gray out ALL MEP elements so findings pop
         gray_color = Color(210, 210, 210)
-        gray_ogs = OverrideGraphicSettings()
-        gray_ogs.SetProjectionLineColor(gray_color)
-        gray_ogs.SetSurfaceForegroundPatternColor(gray_color)
-        if solid_fill_id:
-            gray_ogs.SetSurfaceForegroundPatternId(solid_fill_id)
-        gray_ogs.SetCutLineColor(gray_color)
-        gray_ogs.SetCutForegroundPatternColor(gray_color)
-        if solid_fill_id:
-            gray_ogs.SetCutForegroundPatternId(solid_fill_id)
-        gray_ogs.SetProjectionLineWeight(1)
-        gray_ogs.SetCutLineWeight(1)
-        gray_ogs.SetHalftone(True)
+        gray_ogs = _build_ogs(gray_color, 1, True)
 
         gray_count = 0
         mep_cats = [
@@ -1047,29 +1103,20 @@ try:
         log("  Grayed out {} MEP elements as background".format(gray_count))
 
         # STEP 2: Override flagged elements with bright severity colors
+        # Pre-build an OGS per severity level (faster than building per element)
+        severity_ogs_cache = {}
+        for sev_name in SEVERITY_COLORS:
+            color = SEVERITY_COLORS[sev_name]
+            lw = SEVERITY_LINE_WEIGHTS.get(sev_name, 4)
+            severity_ogs_cache[sev_name] = _build_ogs(color, lw, False)
+
         for eid_str, severity in element_severity.items():
             try:
                 elem_id = ElementId(int(eid_str))
                 elem = doc.GetElement(elem_id)
                 if elem is None:
                     continue
-
-                color = SEVERITY_COLORS.get(severity, SEVERITY_COLORS["Orphan"])
-                line_weight = SEVERITY_LINE_WEIGHTS.get(severity, 4)
-
-                ogs = OverrideGraphicSettings()
-                ogs.SetProjectionLineColor(color)
-                ogs.SetSurfaceForegroundPatternColor(color)
-                if solid_fill_id:
-                    ogs.SetSurfaceForegroundPatternId(solid_fill_id)
-                ogs.SetCutLineColor(color)
-                ogs.SetCutForegroundPatternColor(color)
-                if solid_fill_id:
-                    ogs.SetCutForegroundPatternId(solid_fill_id)
-                ogs.SetProjectionLineWeight(line_weight)
-                ogs.SetCutLineWeight(line_weight)
-                ogs.SetHalftone(False)
-
+                ogs = severity_ogs_cache.get(severity, severity_ogs_cache.get("Orphan"))
                 qa_view.SetElementOverrides(elem_id, ogs)
                 overrides_applied += 1
                 severity_counts[severity] = severity_counts.get(severity, 0) + 1
