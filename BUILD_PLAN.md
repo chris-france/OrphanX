@@ -1,6 +1,10 @@
 # Orphan X — Build Plan
 
-**Team:** 4 people. 1 Mac (Chris — Claude Code, MCP server, all code generation). 3 Windows (Revit + Dynamo + MEP domain expertise).
+**Team:**
+- **Chris France** — Mac, Claude Code, MCP server, all code generation
+- **Ignacio Benito Soto** (Kirby Group) — Windows, Revit + Dynamo
+- **Oskar Lindstrom** (Marioff) — Windows, Revit + Dynamo
+- **Petra O'Sullivan** (Red Engineering) — Windows, Revit + Dynamo
 
 **Time:** ~7 productive hours (8:30 AM – 5:00 PM minus setup, lunch, demo prep)
 
@@ -106,7 +110,7 @@ Build the MCP server skeleton with hardcoded mock data so the AI analysis logic 
 - CORS enabled for local network access
 - Health check endpoint for testing connectivity
 
-### Windows Person 1 — Prepare the Demo Model
+### Petra — Prepare the Demo Model
 
 - Open Snowdon Towers MEP model (or rme_advanced_sample_project.rvt)
 - Frame it as a "generic hospital" for the demo narrative
@@ -127,7 +131,7 @@ Build the MCP server skeleton with hardcoded mock data so the AI analysis logic 
 - Create shared parameters if needed: `OX_Status`, `OX_Severity`, `OX_Note`
 - **Document** the element IDs of seeded issues so we can verify the auditor finds them
 
-### Windows Person 2 — Dynamo Graph Foundation
+### Ignacio — Dynamo Graph Foundation
 
 Based on the discovery results from the first hour:
 
@@ -140,7 +144,7 @@ Based on the discovery results from the first hour:
 - Test Agentic Node #2 connectivity to Chris's Mac (`http://<chris-mac-ip>:8620/sse`)
 - If SSE doesn't work: try stdio transport, or HTTP POST fallback via Python Script node
 
-### Windows Person 3 — Dynamo Graph: View Overrides
+### Oskar — Dynamo Graph: View Overrides
 
 Build the downstream Dynamo nodes that apply visual results:
 
@@ -206,13 +210,13 @@ Priority order — do as many as time allows:
 
 | Time | What | Who |
 |---|---|---|
-| 0:00 – 0:45 | **The Story** — Legionella, dead legs, patients at risk. Why existing tools can't find this. | Best presenter |
-| 0:45 – 1:15 | **The Model** — Show the hospital MEP model. "This passed review." | Revit person |
-| 1:15 – 1:45 | **Run Orphan X** — Open Dynamo, hit Run, show agentic nodes working | Dynamo person |
-| 1:45 – 2:45 | **The Kill Shot** — Zoom to red dead legs. "This is where patients get sick." Then show ALL disciplines: sprinklers, HVAC orphans, electrical. | MEP expert |
-| 2:45 – 3:30 | **The Report** — Show findings by severity. Plain English. ASHRAE 188 reference. | Anyone |
+| 0:00 – 0:45 | **The Story** — Legionella, dead legs, patients at risk. Why existing tools can't find this. | Petra |
+| 0:45 – 1:15 | **The Model** — Show the hospital MEP model. "This passed review." | Petra |
+| 1:15 – 1:45 | **Run Orphan X** — Open Dynamo, hit Run, show agentic nodes working | Ignacio |
+| 1:45 – 2:45 | **The Kill Shot** — Zoom to red dead legs. "This is where patients get sick." Then show ALL disciplines: sprinklers, HVAC orphans, electrical. | Oskar |
+| 2:45 – 3:30 | **The Report** — Show findings by severity. Plain English. ASHRAE 188 reference. | Oskar |
 | 3:30 – 4:15 | **Architecture** — Quick slide: 2 agentic nodes + MCP server. How it works. | Chris |
-| 4:15 – 5:00 | **Impact** — "2 days → 2 minutes. Works on any model. Saves patients." | Best presenter |
+| 4:15 – 5:00 | **Impact** — "2 days → 2 minutes. Works on any model. Saves patients." | Petra |
 
 ### Fallback Plan
 

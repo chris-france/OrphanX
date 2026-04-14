@@ -268,4 +268,15 @@ Produces a plain-English QA/QC report organized by discipline and severity, with
 
 ---
 
-*— Team Orphan X — Built with Claude Code —*
+---
+
+## Team Orphan X
+
+| Name | Company | Role |
+|---|---|---|
+| **Chris France** | AECOM | AI / Backend — MCP server, Claude integration, code generation |
+| **Ignacio Benito Soto** | Kirby Group | Dynamo graph, agentic node wiring |
+| **Oskar Lindstrom** | Marioff | Dynamo view overrides, MEP domain |
+| **Petra O'Sullivan** | Red Engineering | Revit model prep, MEP domain, demo lead |
+
+*Built with Claude Code*
