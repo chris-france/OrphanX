@@ -912,7 +912,25 @@ log("=" * 60)
 # SAVE FILES TO DESKTOP
 # ============================================================================
 import os
-desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+import tempfile
+
+# Try Desktop, then Documents, then home, then temp
+desktop = None
+home = os.path.expanduser("~")
+for folder in ["Desktop", "Documents", ""]:
+    test_path = os.path.join(home, folder) if folder else home
+    if os.path.isdir(test_path):
+        try:
+            test_file = os.path.join(test_path, "_orphanx_test.tmp")
+            with open(test_file, "w") as f:
+                f.write("test")
+            os.remove(test_file)
+            desktop = test_path
+            break
+        except Exception:
+            continue
+if desktop is None:
+    desktop = tempfile.gettempdir()
 
 # Save log file
 log_text = "\n".join(log_lines)
