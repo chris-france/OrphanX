@@ -39,6 +39,13 @@ from RevitServices.Persistence import DocumentManager
 # ---------------------------------------------------------------------------
 doc = DocumentManager.Instance.CurrentDBDocument
 
+def eid_int(element_id):
+    """Get integer value from ElementId — works on all Revit versions."""
+    try:
+        return element_id.Value
+    except AttributeError:
+        return element_id.IntegerValue
+
 # ---------------------------------------------------------------------------
 # Input — building type
 # ---------------------------------------------------------------------------
@@ -188,7 +195,7 @@ def _get_connected_ids(elem):
                 for ref_conn in connector.AllRefs:
                     owner = ref_conn.Owner
                     if owner and owner.Id != elem.Id:
-                        eid = str(owner.Id.IntegerValue)
+                        eid = str(owner.Id.Value)
                         if eid not in connected:
                             connected.append(eid)
     except Exception:
@@ -204,7 +211,7 @@ def _get_level_name(elem):
     """Return the level name for an element, or 'Unknown'."""
     try:
         level_id = elem.LevelId
-        if level_id and level_id.IntegerValue > 0:
+        if level_id and eid_int(level_id) > 0:
             level = doc.GetElement(level_id)
             if level:
                 return level.Name
@@ -275,7 +282,7 @@ def _get_type_name(elem):
 def _serialize_element(elem):
     """Convert a Revit element to the schema dict."""
     return {
-        "element_id": str(elem.Id.IntegerValue),
+        "element_id": str(elem.Id.Value),
         "category": _safe_name(elem.Category) if elem.Category else "Unknown",
         "family": _get_family_name(elem),
         "type": _get_type_name(elem),
@@ -314,7 +321,7 @@ def _get_system_elements(system):
 
         if elem_set:
             for elem in elem_set:
-                eid = elem.Id.IntegerValue
+                eid = elem.Id.Value
                 if eid not in seen_ids:
                     seen_ids.add(eid)
                     elements.append(_serialize_element(elem))
@@ -325,7 +332,7 @@ def _get_system_elements(system):
     if not elements:
         try:
             for elem in system.Elements:
-                eid = elem.Id.IntegerValue
+                eid = elem.Id.Value
                 if eid not in seen_ids:
                     seen_ids.add(eid)
                     elements.append(_serialize_element(elem))
@@ -352,7 +359,7 @@ try:
         try:
             sys_type, discipline = _get_system_type_and_discipline_mech(sys)
             system_data = {
-                "system_id": str(sys.Id.IntegerValue),
+                "system_id": str(sys.Id.Value),
                 "system_name": _safe_name(sys),
                 "system_type": sys_type,
                 "discipline": discipline,
@@ -360,7 +367,7 @@ try:
             }
             systems_out.append(system_data)
         except Exception as ex:
-            errors.append("MechSystem {}: {}".format(sys.Id.IntegerValue, str(ex)))
+            errors.append("MechSystem {}: {}".format(sys.Id.Value, str(ex)))
 
     # -- Piping Systems --
     pipe_systems = (
@@ -372,7 +379,7 @@ try:
         try:
             sys_type, discipline = _get_system_type_and_discipline_pipe(sys)
             system_data = {
-                "system_id": str(sys.Id.IntegerValue),
+                "system_id": str(sys.Id.Value),
                 "system_name": _safe_name(sys),
                 "system_type": sys_type,
                 "discipline": discipline,
@@ -380,7 +387,7 @@ try:
             }
             systems_out.append(system_data)
         except Exception as ex:
-            errors.append("PipeSystem {}: {}".format(sys.Id.IntegerValue, str(ex)))
+            errors.append("PipeSystem {}: {}".format(sys.Id.Value, str(ex)))
 
     # -- Electrical Systems --
     elec_systems = (
@@ -392,7 +399,7 @@ try:
         try:
             sys_type, discipline = _get_system_type_and_discipline_elec(sys)
             system_data = {
-                "system_id": str(sys.Id.IntegerValue),
+                "system_id": str(sys.Id.Value),
                 "system_name": _safe_name(sys),
                 "system_type": sys_type,
                 "discipline": discipline,
@@ -400,7 +407,7 @@ try:
             }
             systems_out.append(system_data)
         except Exception as ex:
-            errors.append("ElecSystem {}: {}".format(sys.Id.IntegerValue, str(ex)))
+            errors.append("ElecSystem {}: {}".format(sys.Id.Value, str(ex)))
 
 except Exception as ex:
     errors.append("Collection error: {}".format(traceback.format_exc()))
