@@ -307,4 +307,17 @@ log("=" * 60)
 log("SCAN COMPLETE. Send this output to Chris.")
 log("=" * 60)
 
-OUT = "\n".join(lines)
+output_text = "\n".join(lines)
+
+# Save to desktop so they can send it to Chris
+import os
+desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+outpath = os.path.join(desktop, "orphanx_scan.txt")
+try:
+    with open(outpath, "w") as f:
+        f.write(output_text)
+    output_text += "\n\nSaved to: " + outpath
+except Exception as ex:
+    output_text += "\n\nCould not save file: " + str(ex)
+
+OUT = output_text
