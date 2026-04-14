@@ -1,0 +1,83 @@
+============================================================
+ORPHAN X — MODEL SCAN
+============================================================
+
+Model: 2026_Hospital_HVAC
+
+--- AVAILABLE API CLASSES ---
+MechanicalSystem: YES
+  DuctSystemType values: 
+PipingSystem: YES
+  PipeSystemType values: 
+ElectricalSystem: YES
+
+--- MEP SYSTEMS ---
+Mechanical Systems: 445
+  1: 307
+  2: 100
+  3: 38
+  Sample: 'VAV-1-1' (ID: 658804)
+Piping Systems: 674
+  16: 11
+  17: 72
+  22: 150
+  7: 219
+  8: 222
+  Sample: 'HWR 1' (ID: 747462)
+Electrical Systems: 0
+
+--- MEP ELEMENT COUNTS BY CATEGORY ---
+  Air Terminals: 1058
+  Ducts: 4201
+  Duct Fittings: 4387
+  Flex Ducts: 424
+  Pipes: 3857
+  Pipe Fittings: 3487
+  Pipe Segments: 18
+  Mechanical Equipment: 663
+  TOTAL MEP ELEMENTS: 18095
+
+--- SAMPLE ELEMENTS (first 5 from largest category) ---
+Showing from 'Duct Fittings' (4387 total):
+
+  ID: 656666
+    Category: Duct Fittings
+    Family: Round Transition - Angle
+    Type: ?
+    Level: Level 1
+    Connectors: 2 total, connected to: [618459, 619799]
+
+  ID: 656667
+    Category: Duct Fittings
+    Family: Round Transition - Angle
+    Type: ?
+    Level: Level 1
+    Connectors: 2 total, connected to: [618460, 619796]
+
+  ID: 656668
+    Category: Duct Fittings
+    Family: Round Transition - Angle
+    Type: ?
+    Level: Level 1
+    Connectors: 2 total, connected to: [618461, 619793]
+
+  ID: 658969
+    Category: Duct Fittings
+    Family: Round Transition - Angle
+    Type: ?
+    Level: Level 1
+    Connectors: 2 total, connected to: [661903, 620344]
+
+  ID: 659651
+    Category: Duct Fittings
+    Family: Round Elbow
+    Type: ?
+    Level: Level 1
+    Connectors: 2 total, connected to: [618577, 659604]
+
+--- NETWORK TEST ---
+  orphanx.chrisfrance.ai: UNREACHABLE (The read operation timed out)
+
+============================================================
+SCAN COMPLETE. Send this output to Chris.
+============================================================
