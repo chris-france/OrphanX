@@ -382,9 +382,12 @@ for bic in _MEP_CATS:
                     sys_name = sys_param.AsString()
                     if sys_name:
                         eid = eid_int(elem.Id)
-                        if sys_name not in _elem_to_system:
-                            _elem_to_system[sys_name] = []
-                        _elem_to_system[sys_name].append((eid, elem))
+                        for sn in sys_name.split(","):
+                            sn = sn.strip()
+                            if sn:
+                                if sn not in _elem_to_system:
+                                    _elem_to_system[sn] = []
+                                _elem_to_system[sn].append((eid, elem))
             except Exception:
                 pass
     except Exception:
@@ -393,58 +396,27 @@ log("  Indexed {} system names across {} elements".format(
     len(_elem_to_system), sum(len(v) for v in _elem_to_system.values())))
 
 # ============================================================================
-# PHASE 1: EXTRACT MEP SYSTEMS
+# PHASE 1: EXTRACT MEP SYSTEMS (index-first approach)
 # ============================================================================
 log("PHASE 1: Extracting MEP systems from Revit model...")
 errors = []
 systems_out = []
 
+# Step 1: Collect metadata from system objects (name -> id, type, discipline)
+_sys_meta = {}
 try:
     for sys in FilteredElementCollector(doc).OfClass(MechanicalSystem).ToElements():
         try:
             sys_type, discipline = _get_duct_type(sys)
-            elems = _get_system_elements(sys)
-            # Fallback: use reverse index if network iteration returned nothing
-            if not elems:
-                sys_name = _safe_name(sys)
-                if sys_name in _elem_to_system:
-                    for eid, elem in _elem_to_system[sys_name]:
-                        try:
-                            elems.append(_serialize_element(elem))
-                        except Exception:
-                            pass
-            systems_out.append({
-                "system_id": str(eid_int(sys.Id)),
-                "system_name": _safe_name(sys),
-                "system_type": sys_type,
-                "discipline": discipline,
-                "elements": elems,
-            })
+            _sys_meta[_safe_name(sys)] = (str(eid_int(sys.Id)), sys_type, discipline)
         except Exception as ex:
-            errors.append("MechSys: {}".format(str(ex)))
-
+            errors.append("MechMeta: {}".format(str(ex)))
     for sys in FilteredElementCollector(doc).OfClass(PipingSystem).ToElements():
         try:
             sys_type, discipline = _get_pipe_type(sys)
-            elems = _get_system_elements(sys)
-            if not elems:
-                sys_name = _safe_name(sys)
-                if sys_name in _elem_to_system:
-                    for eid, elem in _elem_to_system[sys_name]:
-                        try:
-                            elems.append(_serialize_element(elem))
-                        except Exception:
-                            pass
-            systems_out.append({
-                "system_id": str(eid_int(sys.Id)),
-                "system_name": _safe_name(sys),
-                "system_type": sys_type,
-                "discipline": discipline,
-                "elements": elems,
-            })
+            _sys_meta[_safe_name(sys)] = (str(eid_int(sys.Id)), sys_type, discipline)
         except Exception as ex:
-            errors.append("PipeSys: {}".format(str(ex)))
-
+            errors.append("PipeMeta: {}".format(str(ex)))
     for sys in FilteredElementCollector(doc).OfClass(ElectricalSystem).ToElements():
         try:
             st_name = str(sys.SystemType)
@@ -454,17 +426,80 @@ try:
                 sys_type, discipline = "FireAlarm", "Electrical"
             else:
                 sys_type, discipline = "PowerCircuit", "Electrical"
-            systems_out.append({
-                "system_id": str(eid_int(sys.Id)),
-                "system_name": _safe_name(sys),
-                "system_type": sys_type,
-                "discipline": discipline,
-                "elements": _get_system_elements(sys),
-            })
+            _sys_meta[_safe_name(sys)] = (str(eid_int(sys.Id)), sys_type, discipline)
         except Exception as ex:
-            errors.append("ElecSys: {}".format(str(ex)))
+            errors.append("ElecMeta: {}".format(str(ex)))
 except Exception as ex:
-    errors.append("System collection error: {}".format(str(ex)))
+    errors.append("System metadata error: {}".format(str(ex)))
+
+log("  Collected metadata for {} system objects".format(len(_sys_meta)))
+
+# Step 2: Build systems from reverse index (guaranteed to have elements)
+_used_sys_names = set()
+for sys_name, elem_list in _elem_to_system.items():
+    elems = []
+    for eid, elem in elem_list:
+        try:
+            elems.append({
+                "element_id": str(eid),
+                "category": _safe_name(elem.Category) if elem.Category else "Unknown",
+                "family": _get_family_name(elem),
+                "type": _get_type_name(elem),
+                "level": _get_level_name(elem),
+                "connected_to": _get_connected_ids(elem),
+                "parameters": _get_element_params(elem),
+            })
+        except Exception:
+            try:
+                elems.append({
+                    "element_id": str(eid),
+                    "category": str(elem.Category.Name) if elem.Category else "Unknown",
+                    "family": "Unknown",
+                    "type": "Unknown",
+                    "level": "Unknown",
+                    "connected_to": [],
+                    "parameters": {},
+                })
+            except Exception:
+                pass
+    if sys_name in _sys_meta:
+        sid, stype, disc = _sys_meta[sys_name]
+        _used_sys_names.add(sys_name)
+    else:
+        sid = "idx-" + sys_name
+        stype = "Other"
+        disc = "Unknown"
+        name_lower = sys_name.lower()
+        if any(k in name_lower for k in ["supply", "return", "exhaust", "vav", "ahu", "fcu"]):
+            stype, disc = "SupplyAir", "Mechanical"
+        elif any(k in name_lower for k in ["hot", "hws", "hwr", "dhw"]):
+            stype, disc = "DomesticHotWater", "Plumbing"
+        elif any(k in name_lower for k in ["cold", "cw", "dcw"]):
+            stype, disc = "DomesticColdWater", "Plumbing"
+        elif any(k in name_lower for k in ["sanit", "waste", "sewer"]):
+            stype, disc = "SanitaryWaste", "Plumbing"
+        elif any(k in name_lower for k in ["fire", "sprink"]):
+            stype, disc = "Sprinkler", "FireProtection"
+        elif any(k in name_lower for k in ["storm", "rain"]):
+            stype, disc = "Storm", "Plumbing"
+    systems_out.append({
+        "system_id": sid,
+        "system_name": sys_name,
+        "system_type": stype,
+        "discipline": disc,
+        "elements": elems,
+    })
+
+# Step 3: Add system objects that had no elements in the index (empty systems)
+for sys_name, (sid, stype, disc) in _sys_meta.items():
+    if sys_name not in _used_sys_names and sys_name not in _elem_to_system:
+        systems_out.append({
+            "system_id": sid,
+            "system_name": sys_name,
+            "system_type": stype,
+            "discipline": disc,
+            "elements": [],
+        })
 
 total_elements = sum(len(s["elements"]) for s in systems_out)
 log("  Found {} systems with {} elements".format(len(systems_out), total_elements))
