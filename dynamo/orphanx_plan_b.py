@@ -657,15 +657,17 @@ FALSE POSITIVES: Skip systems named FUTURE or with fewer than 2 elements.
 
 You MUST return at least one finding if any domestic water system has pipes without fixtures.
 
-Return ONLY valid JSON: {"findings": [{"system_id":"...", "system_name":"...", "finding_type":"dead_leg|incomplete_chain|dead_end|missing_component", "severity":"...", "description":"2-3 sentences about what is wrong and patient risk", "affected_elements":["element_id",...], "recommendation":"...", "code_reference":"ASHRAE 188|NFPA 13|IPC 901.2|null"}]}"""
+Return at most 20 findings, prioritize Critical severity. Keep descriptions under 40 words.
+Return ONLY valid JSON (no markdown, no code fences): {"findings": [{"system_id":"...", "system_name":"...", "finding_type":"dead_leg|incomplete_chain|dead_end|missing_component", "severity":"...", "description":"short", "affected_elements":["id",...], "recommendation":"short", "code_reference":"ASHRAE 188|NFPA 13|IPC 901.2|null"}]}"""
 
 CLASSIFY_PROMPT = """You are an MEP expert classifying orphaned Revit elements not in any system.
 For each: determine likely system, severity, action.
 Sprinkler heads = Critical-Life Safety. Plumbing in hospital = Critical-Patient Safety. HVAC in patient rooms = Major.
 
-Return ONLY valid JSON: {"classifications": [{"element_id":"...", "likely_system_type":"...", "confidence":0-100, "reasoning":"...", "severity":"...", "action":"..."}]}"""
+Return at most 30 classifications, prioritize Critical severity. Keep reasoning under 20 words.
+Return ONLY valid JSON (no markdown, no code fences): {"classifications": [{"element_id":"...", "likely_system_type":"...", "confidence":0-100, "reasoning":"short", "severity":"...", "action":"short"}]}"""
 
-def call_claude(system_prompt, user_msg, max_tokens=8192):
+def call_claude(system_prompt, user_msg, max_tokens=16384):
     """Call Claude API directly via urllib — no SDK, no MCP, no server."""
     payload = json.dumps({
         "model": CLAUDE_MODEL,
@@ -687,25 +689,42 @@ def call_claude(system_prompt, user_msg, max_tokens=8192):
     return data["content"][0]["text"]
 
 def parse_json(text):
-    """Extract JSON from Claude response — handles markdown blocks and messy output."""
+    """Extract JSON from Claude response — handles markdown, truncation, messy output."""
+    import re
+    # Strip markdown fences
+    clean = text.strip()
+    if clean.startswith("```json"):
+        clean = clean[7:]
+    elif clean.startswith("```"):
+        clean = clean[3:]
+    if clean.endswith("```"):
+        clean = clean[:-3]
+    clean = clean.strip()
+    # Try parsing as-is
     try:
-        return json.loads(text)
+        return json.loads(clean)
     except Exception:
         pass
-    for marker in ["```json", "```"]:
-        if marker in text:
-            try:
-                chunk = text.split(marker)[1].split("```")[0].strip()
-                return json.loads(chunk)
-            except Exception:
-                pass
-    import re
-    m = re.search(r'\{[\s\S]*\}', text)
+    # Try to find the largest valid JSON object
+    m = re.search(r'\{[\s\S]*\}', clean)
     if m:
         try:
             return json.loads(m.group())
         except Exception:
             pass
+    # Truncated JSON repair: close open brackets
+    repaired = clean
+    if repaired.count("[") > repaired.count("]"):
+        # Find last complete item (ends with })
+        last_brace = repaired.rfind("}")
+        if last_brace > 0:
+            repaired = repaired[:last_brace + 1]
+            repaired += "]" * (repaired.count("[") - repaired.count("]"))
+            repaired += "}" * (repaired.count("{") - repaired.count("}"))
+            try:
+                return json.loads(repaired)
+            except Exception:
+                pass
     return None
 
 # Call audit_systems — pipes only (where dead legs live)
