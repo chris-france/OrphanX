@@ -1,4 +1,4 @@
-"""Orphan X — PLAN B: Direct Claude API (No MCP Server)
+"""Orphan X — PLAN C: Cap Detection + Visual Pop (No MCP Server)
 
 ONE SCRIPT. ONE PASTE. ONE RUN. NO SERVER NEEDED.
 
@@ -48,6 +48,10 @@ from Autodesk.Revit.DB import (
     FillPatternElement,
     XYZ,
 )
+try:
+    from Autodesk.Revit.DB import DisplayStyle
+except ImportError:
+    DisplayStyle = None
 from Autodesk.Revit.DB.Mechanical import MechanicalSystem, DuctSystemType
 from Autodesk.Revit.DB.Plumbing import PipingSystem, PipeSystemType
 from Autodesk.Revit.DB.Electrical import ElectricalSystem
@@ -640,25 +644,29 @@ ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
 AUDIT_PROMPT = """You are an expert MEP systems integrity auditor for a HOSPITAL BIM model.
-Analyze piping system data for dead legs, incomplete chains, missing components, and safety issues.
+You receive system SUMMARIES with category counts and cap/plug indicators.
 
-## HOW TO DETECT ISSUES (connection data may be missing)
+## DEAD LEG DETECTION
 
-Look at each system's element composition:
-- DEAD LEG: A domestic water system with Pipes but NO fixture at the end (no PlumbingFixtures, no equipment). Pipes going nowhere = stagnant water = Legionella. ASHRAE 188 violation. CRITICAL PATIENT SAFETY.
-- INCOMPLETE CHAIN: System has pipes/fittings but missing expected terminal elements (e.g., supply system with no diffusers/fixtures).
-- MISSING COMPONENT: Sanitary system without vents (IPC 901.2). Sprinkler branch without heads (NFPA 13).
-- DEAD END: Small system with only 1-3 pipe elements and no fixtures = likely dead-end branch.
+Each system has "categories" (element counts by type) and optionally "caps_plugs" (count of pipe caps/plugs/blind flanges).
 
-For each system, count the element categories. If a domestic water system has pipes but zero plumbing fixtures, that is a dead leg finding. If a sprinkler branch has pipes but no sprinkler heads, that is a missing coverage finding.
+TWO ways to detect dead legs:
+1. CAPPED PIPE: System has "caps_plugs" > 0. A cap on a water pipe = sealed dead-end = stagnant water. ASHRAE 188 violation.
+2. NO FIXTURES: Domestic water system (HWS/HWR/CWS) with Pipes but 0 Plumbing Fixtures = water goes nowhere.
 
-SEVERITY: Critical-Patient Safety > Critical-Life Safety > Critical-Code Violation > Major > Minor
-FALSE POSITIVES: Skip systems named FUTURE or with fewer than 2 elements.
+Both are Critical-Patient Safety in a hospital. Legionella kills immunocompromised patients.
 
-You MUST return at least one finding if any domestic water system has pipes without fixtures.
+## OTHER ISSUES
+- MISSING COMPONENT: Sanitary without vents (IPC 901.2). Sprinkler without heads (NFPA 13).
+- DEAD END: System with only 1-3 elements and no terminal equipment.
+- INCOMPLETE CHAIN: Pipes/fittings but no terminal elements.
 
-Return at most 20 findings, prioritize Critical severity. Keep descriptions under 40 words.
-Return ONLY valid JSON (no markdown, no code fences): {"findings": [{"system_id":"...", "system_name":"...", "finding_type":"dead_leg|incomplete_chain|dead_end|missing_component", "severity":"...", "description":"short", "affected_elements":["id",...], "recommendation":"short", "code_reference":"ASHRAE 188|NFPA 13|IPC 901.2|null"}]}"""
+SEVERITY: Critical-Patient Safety, Critical-Life Safety, Critical-Code Violation, Major, Minor
+Skip systems named FUTURE or with fewer than 2 elements.
+
+Return at most 15 findings, prioritize Critical. Keep descriptions under 30 words.
+Return ONLY valid JSON, no markdown, no code fences:
+{"findings": [{"system_id":"...", "system_name":"...", "finding_type":"dead_leg|capped_dead_leg|incomplete_chain|dead_end|missing_component", "severity":"Critical-Patient Safety", "description":"short", "recommendation":"short", "code_reference":"ASHRAE 188"}]}"""
 
 CLASSIFY_PROMPT = """You are an MEP expert classifying orphaned Revit elements not in any system.
 For each: determine likely system, severity, action.
@@ -732,24 +740,40 @@ audit_findings = []
 _PIPE_TYPES = {"DomesticHotWater", "DomesticColdWater", "SanitaryWaste", "Storm",
                "Hydronic", "Sprinkler", "Other"}
 _PIPE_DISCIPLINES = {"Plumbing", "FireProtection"}
-pipe_systems = []
+pipe_summaries = []
+system_id_to_elements = {}
+total_caps = 0
 for s in systems_out:
     if not s.get("elements"):
         continue
     if s["system_type"] not in _PIPE_TYPES and s["discipline"] not in _PIPE_DISCIPLINES:
         continue
-    slim_elems = [{"element_id": e["element_id"], "category": e.get("category", ""),
-                   "family": e.get("family", ""), "type": e.get("type", "")}
-                  for e in s["elements"]]
-    pipe_systems.append({
+    elem_ids = [str(e["element_id"]) for e in s["elements"]]
+    system_id_to_elements[str(s["system_id"])] = elem_ids
+    cat_counts = {}
+    cap_count = 0
+    for e in s["elements"]:
+        cat = e.get("category", "Unknown")
+        cat_counts[cat] = cat_counts.get(cat, 0) + 1
+        fam_lower = e.get("family", "").lower()
+        type_lower = e.get("type", "").lower()
+        if any(kw in fam_lower or kw in type_lower for kw in ("cap", "plug", "blind", "end cap", "test cap")):
+            cap_count += 1
+    total_caps += cap_count
+    summary = {
         "system_id": s["system_id"], "system_name": s["system_name"],
-        "system_type": s["system_type"], "element_count": len(slim_elems),
-        "elements": slim_elems,
-    })
-if pipe_systems:
-    log("  Auditing {} piping systems (slim)...".format(len(pipe_systems)))
+        "system_type": s["system_type"], "element_count": len(elem_ids),
+        "categories": cat_counts,
+    }
+    if cap_count > 0:
+        summary["caps_plugs"] = cap_count
+    pipe_summaries.append(summary)
+log("  {} piping systems, {} total caps/plugs detected".format(len(pipe_summaries), total_caps))
+if pipe_summaries:
+    log("  Auditing {} piping systems (summary mode)...".format(len(pipe_summaries)))
     try:
-        audit_payload = json.dumps({"building_type": BUILDING_TYPE, "systems": pipe_systems})
+        audit_payload = json.dumps({"building_type": BUILDING_TYPE, "systems": pipe_summaries})
+        log("  Payload size: {} bytes".format(len(audit_payload)))
         user_msg = "Analyze these MEP systems. Return ONLY JSON with findings array.\n\n" + audit_payload
         raw = call_claude(AUDIT_PROMPT, user_msg)
         log("  Claude response (first 500 chars): {}".format(raw[:500]))
@@ -836,13 +860,18 @@ def _normalize_severity(raw):
         return "Minor"
     return "Orphan"
 
-# Build element -> severity map
+# Build element -> severity map using system_id -> elements lookup
 element_severity = {}
 
 for finding in audit_findings:
     severity = _normalize_severity(finding.get("severity", ""))
-    for eid_str in finding.get("affected_elements", []):
-        eid_str = str(eid_str)
+    sid = str(finding.get("system_id", ""))
+    elem_ids = system_id_to_elements.get(sid, [])
+    if not elem_ids:
+        elem_ids = [str(e) for e in finding.get("affected_elements", [])]
+    log("    Coloring {} ({}) — {} elements".format(
+        finding.get("system_name", "?"), severity, len(elem_ids)))
+    for eid_str in elem_ids:
         existing = element_severity.get(eid_str)
         if existing is None or SEVERITY_PRIORITY.get(severity, 0) > SEVERITY_PRIORITY.get(existing, 0):
             element_severity[eid_str] = severity
@@ -914,6 +943,14 @@ try:
                 log("  ERROR: Could not create view: {}".format(str(ex)))
 
     if qa_view:
+        # Set view to Shaded so color overrides are visible
+        try:
+            if DisplayStyle is not None:
+                qa_view.DisplayStyle = DisplayStyle.ShadingWithEdges
+                log("  View set to ShadingWithEdges")
+        except Exception as ex:
+            log("  Set view to Shaded manually if colors don't show: {}".format(str(ex)))
+
         # Get solid fill pattern
         solid_fill_id = None
         try:
@@ -926,6 +963,43 @@ try:
         except Exception:
             pass
 
+        # STEP 1: Gray out ALL MEP elements so findings pop
+        gray_color = Color(210, 210, 210)
+        gray_ogs = OverrideGraphicSettings()
+        gray_ogs.SetProjectionLineColor(gray_color)
+        gray_ogs.SetSurfaceForegroundPatternColor(gray_color)
+        if solid_fill_id:
+            gray_ogs.SetSurfaceForegroundPatternId(solid_fill_id)
+        gray_ogs.SetCutLineColor(gray_color)
+        gray_ogs.SetCutForegroundPatternColor(gray_color)
+        if solid_fill_id:
+            gray_ogs.SetCutForegroundPatternId(solid_fill_id)
+        gray_ogs.SetProjectionLineWeight(1)
+        gray_ogs.SetCutLineWeight(1)
+        gray_ogs.SetHalftone(True)
+
+        gray_count = 0
+        mep_cats = [
+            BuiltInCategory.OST_DuctCurves, BuiltInCategory.OST_PipeCurves,
+            BuiltInCategory.OST_DuctFitting, BuiltInCategory.OST_PipeFitting,
+            BuiltInCategory.OST_DuctAccessory, BuiltInCategory.OST_PipeAccessory,
+            BuiltInCategory.OST_MechanicalEquipment, BuiltInCategory.OST_PlumbingFixtures,
+            BuiltInCategory.OST_Sprinklers, BuiltInCategory.OST_DuctTerminal,
+            BuiltInCategory.OST_FlexDuctCurves, BuiltInCategory.OST_FlexPipeCurves,
+        ]
+        for bic in mep_cats:
+            try:
+                for elem in FilteredElementCollector(doc).OfCategory(bic).WhereElementIsNotElementType().ToElements():
+                    try:
+                        qa_view.SetElementOverrides(elem.Id, gray_ogs)
+                        gray_count += 1
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+        log("  Grayed out {} MEP elements as background".format(gray_count))
+
+        # STEP 2: Override flagged elements with bright severity colors
         for eid_str, severity in element_severity.items():
             try:
                 elem_id = ElementId(int(eid_str))
@@ -947,6 +1021,7 @@ try:
                     ogs.SetCutForegroundPatternId(solid_fill_id)
                 ogs.SetProjectionLineWeight(line_weight)
                 ogs.SetCutLineWeight(line_weight)
+                ogs.SetHalftone(False)
 
                 qa_view.SetElementOverrides(elem_id, ogs)
                 overrides_applied += 1
