@@ -500,15 +500,17 @@ def call_mcp_tool(tool_name, arg_name, arg_value):
     """Call an MCP tool via SSE + JSON-RPC and return the result."""
     try:
         # Step 1: Get session from SSE endpoint
+        # SSE is streaming — read line by line, not fixed byte count
         sse_req = urllib.request.Request(MCP_URL + "/sse", method="GET")
         sse_resp = urllib.request.urlopen(sse_req, timeout=30, context=ctx)
-        sse_data = sse_resp.read(500).decode("utf-8")
 
         endpoint = None
-        for line in sse_data.split("\n"):
-            if line.startswith("data: ") and "session_id" in line:
-                endpoint = line[6:].strip()
+        for _ in range(10):
+            line = sse_resp.readline().decode("utf-8").strip()
+            if line.startswith("data:") and "session_id" in line:
+                endpoint = line.split("data:")[1].strip()
                 break
+        sse_resp.close()
 
         if not endpoint:
             return None, "Could not get session from MCP server"

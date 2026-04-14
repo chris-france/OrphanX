@@ -302,11 +302,17 @@ try:
     ctx.verify_mode = ssl.CERT_NONE
     req = urllib.request.Request("https://orphanx.chrisfrance.ai/sse")
     resp = urllib.request.urlopen(req, timeout=15, context=ctx)
-    data = resp.read(200).decode("utf-8")
-    if "endpoint" in data:
+    # SSE is a streaming response — read line by line, not a fixed byte count
+    first_line = resp.readline().decode("utf-8").strip()
+    second_line = resp.readline().decode("utf-8").strip()
+    resp.close()
+    if "endpoint" in first_line or "endpoint" in second_line:
         log("  orphanx.chrisfrance.ai: REACHABLE")
+        log("  Response: {} | {}".format(first_line, second_line))
     else:
-        log("  orphanx.chrisfrance.ai: GOT RESPONSE BUT UNEXPECTED: {}".format(data[:100]))
+        log("  orphanx.chrisfrance.ai: GOT RESPONSE BUT UNEXPECTED:")
+        log("    Line 1: {}".format(first_line))
+        log("    Line 2: {}".format(second_line))
 except Exception as ex:
     log("  orphanx.chrisfrance.ai: UNREACHABLE ({})".format(str(ex)))
 
