@@ -319,32 +319,24 @@ def _get_pipe_type(sys):
     return ("Other", "Plumbing")
 
 def _get_system_elements(system):
+    """Get elements from system — tries network properties first, then .Elements."""
     elements = []
     seen_ids = set()
 
-    # Try all known ways to get elements from a system
-    elem_sources = []
+    sources = []
     try:
         if isinstance(system, MechanicalSystem):
-            try:
-                elem_sources.append(system.DuctNetwork)
-            except Exception:
-                pass
+            try: sources.append(system.DuctNetwork)
+            except Exception: pass
         elif isinstance(system, PipingSystem):
-            try:
-                elem_sources.append(system.PipingNetwork)
-            except Exception:
-                pass
+            try: sources.append(system.PipingNetwork)
+            except Exception: pass
     except Exception:
         pass
+    try: sources.append(system.Elements)
+    except Exception: pass
 
-    # Always try .Elements as fallback
-    try:
-        elem_sources.append(system.Elements)
-    except Exception:
-        pass
-
-    for source in elem_sources:
+    for source in sources:
         if source is None:
             continue
         try:
@@ -363,6 +355,42 @@ def _get_system_elements(system):
 
     return elements
 
+
+# Pre-build a map of elements→system by scanning all MEP elements
+# This is the REVERSE approach: instead of asking systems for elements,
+# ask elements which system they belong to.
+log("  Building element-to-system index...")
+_elem_to_system = {}
+_MEP_CATS = [
+    BuiltInCategory.OST_DuctTerminal, BuiltInCategory.OST_DuctCurves,
+    BuiltInCategory.OST_DuctFitting, BuiltInCategory.OST_FlexDuctCurves,
+    BuiltInCategory.OST_PipeCurves, BuiltInCategory.OST_PipeFitting,
+    BuiltInCategory.OST_FlexPipeCurves, BuiltInCategory.OST_PipeSegments,
+    BuiltInCategory.OST_MechanicalEquipment, BuiltInCategory.OST_PlumbingFixtures,
+    BuiltInCategory.OST_Sprinklers, BuiltInCategory.OST_ElectricalEquipment,
+    BuiltInCategory.OST_ElectricalFixtures, BuiltInCategory.OST_LightingFixtures,
+    BuiltInCategory.OST_Conduit, BuiltInCategory.OST_CableTray,
+    BuiltInCategory.OST_FireAlarmDevices,
+]
+for bic in _MEP_CATS:
+    try:
+        for elem in FilteredElementCollector(doc).OfCategory(bic).WhereElementIsNotElementType().ToElements():
+            try:
+                sys_param = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)
+                if sys_param and sys_param.HasValue:
+                    sys_name = sys_param.AsString()
+                    if sys_name:
+                        eid = eid_int(elem.Id)
+                        if sys_name not in _elem_to_system:
+                            _elem_to_system[sys_name] = []
+                        _elem_to_system[sys_name].append((eid, elem))
+            except Exception:
+                pass
+    except Exception:
+        pass
+log("  Indexed {} system names across {} elements".format(
+    len(_elem_to_system), sum(len(v) for v in _elem_to_system.values())))
+
 # ============================================================================
 # PHASE 1: EXTRACT MEP SYSTEMS
 # ============================================================================
@@ -374,12 +402,22 @@ try:
     for sys in FilteredElementCollector(doc).OfClass(MechanicalSystem).ToElements():
         try:
             sys_type, discipline = _get_duct_type(sys)
+            elems = _get_system_elements(sys)
+            # Fallback: use reverse index if network iteration returned nothing
+            if not elems:
+                sys_name = _safe_name(sys)
+                if sys_name in _elem_to_system:
+                    for eid, elem in _elem_to_system[sys_name]:
+                        try:
+                            elems.append(_serialize_element(elem))
+                        except Exception:
+                            pass
             systems_out.append({
                 "system_id": str(eid_int(sys.Id)),
                 "system_name": _safe_name(sys),
                 "system_type": sys_type,
                 "discipline": discipline,
-                "elements": _get_system_elements(sys),
+                "elements": elems,
             })
         except Exception as ex:
             errors.append("MechSys: {}".format(str(ex)))
@@ -387,12 +425,21 @@ try:
     for sys in FilteredElementCollector(doc).OfClass(PipingSystem).ToElements():
         try:
             sys_type, discipline = _get_pipe_type(sys)
+            elems = _get_system_elements(sys)
+            if not elems:
+                sys_name = _safe_name(sys)
+                if sys_name in _elem_to_system:
+                    for eid, elem in _elem_to_system[sys_name]:
+                        try:
+                            elems.append(_serialize_element(elem))
+                        except Exception:
+                            pass
             systems_out.append({
                 "system_id": str(eid_int(sys.Id)),
                 "system_name": _safe_name(sys),
                 "system_type": sys_type,
                 "discipline": discipline,
-                "elements": _get_system_elements(sys),
+                "elements": elems,
             })
         except Exception as ex:
             errors.append("PipeSys: {}".format(str(ex)))
@@ -491,6 +538,15 @@ for sys in FilteredElementCollector(doc).OfClass(ElectricalSystem).ToElements():
                 system_element_info[eid] = {"system_name": sys_name, "xyz": _get_location_xyz(elem)}
     except Exception:
         pass
+
+# Also add elements from reverse index (catches elements the network iteration missed)
+for sys_name, elem_list in _elem_to_system.items():
+    for eid, elem in elem_list:
+        system_element_ids.add(eid)
+        if eid not in system_element_info:
+            system_element_info[eid] = {"system_name": sys_name, "xyz": _get_location_xyz(elem)}
+
+log("  {} elements identified as belonging to systems".format(len(system_element_ids)))
 
 system_points = []
 for eid, info in system_element_info.items():
