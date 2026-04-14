@@ -1,0 +1,43 @@
+============================================================
+ORPHAN X — MEP Systems Auditor
+============================================================
+
+PHASE 1: Extracting MEP systems from Revit model...
+  Found 1119 systems with 0 elements
+
+PHASE 2: Finding orphaned elements...
+  Found 749 orphaned elements
+
+PHASE 3: Sending data to Orphan X AI server...
+  Server: https://orphanx.chrisfrance.ai
+  Calling audit_systems...
+  ERROR: MCP call failed: The read operation timed out
+
+  Calling classify_orphans...
+  ERROR: MCP call failed: The read operation timed out
+
+PHASE 4: Applying visual overrides to Revit model...
+  0 elements to color-code
+  Applied 0 color overrides
+
+============================================================
+SUMMARY
+============================================================
+  Systems found: 1119
+  Total elements in systems: 0
+  Orphaned elements: 749
+  AI findings: 0
+  Orphan classifications: 0
+  Color overrides applied: 0
+
+  SEVERITY BREAKDOWN:
+
+  COLOR LEGEND:
+    RED         = Critical Patient Safety / Life Safety
+    ORANGE      = Critical Code Violation
+    YELLOW      = Major
+    CYAN        = Minor
+    GRAY        = Orphan (unclassified)
+
+  Switch to view 'Orphan X - QA Audit' to see results.
+============================================================

@@ -1,0 +1,2762 @@
+{
+  "building_type": "hospital",
+  "systems": [
+    {
+      "system_id": "658804",
+      "system_name": "VAV-1-1",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "658808",
+      "system_name": "VAV-1-2",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "658812",
+      "system_name": "VAV-1-3",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "659504",
+      "system_name": "VAV-1-4",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "659509",
+      "system_name": "VAV-1-5",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "659573",
+      "system_name": "VAV-1-6",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "659994",
+      "system_name": "VAV-1-7",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "659999",
+      "system_name": "Mechanical Exhaust Air 1",
+      "system_type": "Exhaust",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "660257",
+      "system_name": "VAV-1-8",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "660261",
+      "system_name": "VAV-1-9",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "660349",
+      "system_name": "VAV-1-10",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "660783",
+      "system_name": "VAV-1-11",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "661046",
+      "system_name": "VAV-1-12",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "661337",
+      "system_name": "VAV-1-13",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "661530",
+      "system_name": "Mechanical Supply Air 1",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "661746",
+      "system_name": "VAV-1-14",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "661750",
+      "system_name": "VAV-1-15",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "661866",
+      "system_name": "Mechanical Supply Air 2",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "661874",
+      "system_name": "Mechanical Supply Air 3",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "661909",
+      "system_name": "Mechanical Return Air 1",
+      "system_type": "ReturnAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "661917",
+      "system_name": "SA 1",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "661923",
+      "system_name": "SA 94",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "661928",
+      "system_name": "Mechanical Exhaust Air 2",
+      "system_type": "Exhaust",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "661998",
+      "system_name": "Mechanical Supply Air 4",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "662003",
+      "system_name": "Mechanical Supply Air 5",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "662014",
+      "system_name": "Mechanical Supply Air 6",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "662492",
+      "system_name": "Mechanical Supply Air 7",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "662503",
+      "system_name": "Mechanical Supply Air 8",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "662526",
+      "system_name": "Mechanical Exhaust Air 3",
+      "system_type": "Exhaust",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "662531",
+      "system_name": "Mechanical Supply Air 9",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "662577",
+      "system_name": "Mechanical Supply Air 10",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "662582",
+      "system_name": "Mechanical Return Air 2",
+      "system_type": "ReturnAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "662605",
+      "system_name": "Mechanical Supply Air 11",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "662647",
+      "system_name": "Mechanical Supply Air 12",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "662668",
+      "system_name": "Mechanical Supply Air 13",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "662770",
+      "system_name": "Mechanical Supply Air 14",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "662775",
+      "system_name": "Mechanical Supply Air 15",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "662781",
+      "system_name": "Mechanical Supply Air 16",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "662784",
+      "system_name": "Mechanical Supply Air 17",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "662976",
+      "system_name": "Mechanical Supply Air 18",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "662985",
+      "system_name": "Mechanical Supply Air 19",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "663073",
+      "system_name": "Mechanical Supply Air 20",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "663075",
+      "system_name": "Mechanical Supply Air 21",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "663089",
+      "system_name": "Mechanical Supply Air 22",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "663187",
+      "system_name": "Mechanical Supply Air 23",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "663199",
+      "system_name": "Mechanical Supply Air 24",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "663247",
+      "system_name": "Mechanical Supply Air 25",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "663336",
+      "system_name": "SA 35",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "663445",
+      "system_name": "Mechanical Supply Air 27",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    },
+    {
+      "system_id": "663457",
+      "system_name": "Mechanical Supply Air 28",
+      "system_type": "SupplyAir",
+      "discipline": "Mechanical",
+      "elements": []
+    }
+  ],
+  "orphans": [
+    {
+      "element_id": "618353",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619650",
+          "system_name": "Mechanical Return Air 1",
+          "distance_ft": 3.77
+        },
+        {
+          "element_id": "835323",
+          "system_name": "Mechanical Return Air 1",
+          "distance_ft": 3.89
+        },
+        {
+          "element_id": "835321",
+          "system_name": "Mechanical Return Air 1",
+          "distance_ft": 4.67
+        }
+      ]
+    },
+    {
+      "element_id": "618355",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "618329",
+          "system_name": "Mechanical Supply Air 19",
+          "distance_ft": 10.0
+        },
+        {
+          "element_id": "662984",
+          "system_name": "Mechanical Supply Air 19",
+          "distance_ft": 10.45
+        },
+        {
+          "element_id": "618334",
+          "system_name": "Mechanical Supply Air 19",
+          "distance_ft": 11.31
+        }
+      ]
+    },
+    {
+      "element_id": "618356",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619592",
+          "system_name": "SA 94",
+          "distance_ft": 6.68
+        },
+        {
+          "element_id": "834188",
+          "system_name": "SA 94",
+          "distance_ft": 7.94
+        },
+        {
+          "element_id": "835407",
+          "system_name": "SA 94",
+          "distance_ft": 8.04
+        }
+      ]
+    },
+    {
+      "element_id": "618362",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "620220",
+          "system_name": "Mechanical Supply Air 31",
+          "distance_ft": 3.31
+        },
+        {
+          "element_id": "667488",
+          "system_name": "Mechanical Supply Air 31",
+          "distance_ft": 3.91
+        },
+        {
+          "element_id": "834875",
+          "system_name": "Mechanical Supply Air 31",
+          "distance_ft": 4.16
+        }
+      ]
+    },
+    {
+      "element_id": "618381",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "828169",
+          "system_name": "VAV-1-7",
+          "distance_ft": 3.68
+        },
+        {
+          "element_id": "619752",
+          "system_name": "VAV-1-7",
+          "distance_ft": 4.11
+        },
+        {
+          "element_id": "666336",
+          "system_name": "VAV-1-7",
+          "distance_ft": 4.19
+        }
+      ]
+    },
+    {
+      "element_id": "618465",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "831949",
+          "system_name": "Mechanical Supply Air 17",
+          "distance_ft": 4.14
+        },
+        {
+          "element_id": "620158",
+          "system_name": "Mechanical Supply Air 17",
+          "distance_ft": 4.79
+        },
+        {
+          "element_id": "668533",
+          "system_name": "Mechanical Supply Air 17",
+          "distance_ft": 5.92
+        }
+      ]
+    },
+    {
+      "element_id": "618466",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "831912",
+          "system_name": "Mechanical Supply Air 17",
+          "distance_ft": 5.44
+        },
+        {
+          "element_id": "619043",
+          "system_name": "Mechanical Supply Air 17",
+          "distance_ft": 5.45
+        },
+        {
+          "element_id": "831913",
+          "system_name": "Mechanical Supply Air 17",
+          "distance_ft": 6.19
+        }
+      ]
+    },
+    {
+      "element_id": "618467",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619061",
+          "system_name": "Mechanical Supply Air 16",
+          "distance_ft": 5.8
+        },
+        {
+          "element_id": "831618",
+          "system_name": "Mechanical Supply Air 16",
+          "distance_ft": 5.86
+        },
+        {
+          "element_id": "668594",
+          "system_name": "Mechanical Supply Air 16",
+          "distance_ft": 5.92
+        }
+      ]
+    },
+    {
+      "element_id": "618468",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619030",
+          "system_name": "Mechanical Supply Air 14",
+          "distance_ft": 3.38
+        },
+        {
+          "element_id": "831575",
+          "system_name": "Mechanical Supply Air 14",
+          "distance_ft": 3.56
+        },
+        {
+          "element_id": "831576",
+          "system_name": "Mechanical Supply Air 14",
+          "distance_ft": 4.06
+        }
+      ]
+    },
+    {
+      "element_id": "618470",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619146",
+          "system_name": "Mechanical Supply Air 18",
+          "distance_ft": 5.4
+        },
+        {
+          "element_id": "619142",
+          "system_name": "Mechanical Supply Air 18",
+          "distance_ft": 7.01
+        },
+        {
+          "element_id": "618343",
+          "system_name": "Mechanical Supply Air 18",
+          "distance_ft": 7.34
+        }
+      ]
+    },
+    {
+      "element_id": "618471",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "618343",
+          "system_name": "Mechanical Supply Air 18",
+          "distance_ft": 7.21
+        },
+        {
+          "element_id": "662977",
+          "system_name": "Mechanical Supply Air 18",
+          "distance_ft": 7.39
+        },
+        {
+          "element_id": "668389",
+          "system_name": "Mechanical Supply Air 18",
+          "distance_ft": 8.65
+        }
+      ]
+    },
+    {
+      "element_id": "618472",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "618984",
+          "system_name": "Mechanical Supply Air 23",
+          "distance_ft": 5.89
+        },
+        {
+          "element_id": "834267",
+          "system_name": "Mechanical Supply Air 23",
+          "distance_ft": 7.67
+        },
+        {
+          "element_id": "668010",
+          "system_name": "Mechanical Supply Air 23",
+          "distance_ft": 10.43
+        }
+      ]
+    },
+    {
+      "element_id": "618473",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "618982",
+          "system_name": "Mechanical Supply Air 29",
+          "distance_ft": 4.23
+        },
+        {
+          "element_id": "667948",
+          "system_name": "Mechanical Supply Air 29",
+          "distance_ft": 10.44
+        },
+        {
+          "element_id": "620244",
+          "system_name": "Mechanical Supply Air 29",
+          "distance_ft": 10.51
+        }
+      ]
+    },
+    {
+      "element_id": "618474",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619569",
+          "system_name": "SA 94",
+          "distance_ft": 6.87
+        },
+        {
+          "element_id": "835805",
+          "system_name": "Mechanical Supply Air 25",
+          "distance_ft": 10.92
+        },
+        {
+          "element_id": "619052",
+          "system_name": "Mechanical Supply Air 25",
+          "distance_ft": 10.96
+        }
+      ]
+    },
+    {
+      "element_id": "618475",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "618967",
+          "system_name": "Mechanical Supply Air 27",
+          "distance_ft": 6.04
+        },
+        {
+          "element_id": "836382",
+          "system_name": "Mechanical Supply Air 27",
+          "distance_ft": 6.68
+        },
+        {
+          "element_id": "619633",
+          "system_name": "Mechanical Return Air 1",
+          "distance_ft": 10.38
+        }
+      ]
+    },
+    {
+      "element_id": "618476",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "667504",
+          "system_name": "Mechanical Supply Air 31",
+          "distance_ft": 5.58
+        },
+        {
+          "element_id": "667502",
+          "system_name": "Mechanical Supply Air 31",
+          "distance_ft": 6.03
+        },
+        {
+          "element_id": "620218",
+          "system_name": "Mechanical Supply Air 31",
+          "distance_ft": 6.41
+        }
+      ]
+    },
+    {
+      "element_id": "618477",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619549",
+          "system_name": "Mechanical Supply Air 31",
+          "distance_ft": 3.63
+        },
+        {
+          "element_id": "835219",
+          "system_name": "Mechanical Supply Air 31",
+          "distance_ft": 4.47
+        },
+        {
+          "element_id": "835087",
+          "system_name": "Mechanical Supply Air 31",
+          "distance_ft": 5.64
+        }
+      ]
+    },
+    {
+      "element_id": "618478",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "828039",
+          "system_name": "SA 1",
+          "distance_ft": 6.1
+        },
+        {
+          "element_id": "828066",
+          "system_name": "SA 1",
+          "distance_ft": 6.23
+        },
+        {
+          "element_id": "619744",
+          "system_name": "SA 1",
+          "distance_ft": 7.2
+        }
+      ]
+    },
+    {
+      "element_id": "618479",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "618633",
+          "system_name": "VAV-1-11",
+          "distance_ft": 8.61
+        },
+        {
+          "element_id": "666694",
+          "system_name": "Mechanical Supply Air 3",
+          "distance_ft": 8.76
+        },
+        {
+          "element_id": "666692",
+          "system_name": "Mechanical Supply Air 3",
+          "distance_ft": 8.79
+        }
+      ]
+    },
+    {
+      "element_id": "618480",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "618622",
+          "system_name": "VAV-1-11",
+          "distance_ft": 4.8
+        },
+        {
+          "element_id": "825558",
+          "system_name": "VAV-1-11",
+          "distance_ft": 5.66
+        },
+        {
+          "element_id": "666743",
+          "system_name": "VAV-1-11",
+          "distance_ft": 6.19
+        }
+      ]
+    },
+    {
+      "element_id": "618481",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "666924",
+          "system_name": "VAV-1-14",
+          "distance_ft": 5.85
+        },
+        {
+          "element_id": "666926",
+          "system_name": "VAV-1-14",
+          "distance_ft": 6.14
+        },
+        {
+          "element_id": "618692",
+          "system_name": "VAV-1-14",
+          "distance_ft": 6.3
+        }
+      ]
+    },
+    {
+      "element_id": "618482",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "620091",
+          "system_name": "Mechanical Exhaust Air 2",
+          "distance_ft": 6.59
+        },
+        {
+          "element_id": "945688",
+          "system_name": "SA 94",
+          "distance_ft": 8.29
+        },
+        {
+          "element_id": "945392",
+          "system_name": "Mechanical Exhaust Air 2",
+          "distance_ft": 8.87
+        }
+      ]
+    },
+    {
+      "element_id": "618483",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619902",
+          "system_name": "Mechanical Supply Air 5",
+          "distance_ft": 5.54
+        },
+        {
+          "element_id": "618428",
+          "system_name": "Mechanical Supply Air 5",
+          "distance_ft": 10.0
+        },
+        {
+          "element_id": "618429",
+          "system_name": "Mechanical Supply Air 5",
+          "distance_ft": 10.0
+        }
+      ]
+    },
+    {
+      "element_id": "618484",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "841359",
+          "system_name": "MG 62",
+          "distance_ft": 17.67
+        },
+        {
+          "element_id": "708869",
+          "system_name": "SA 140",
+          "distance_ft": 20.49
+        },
+        {
+          "element_id": "841520",
+          "system_name": "MG 62",
+          "distance_ft": 20.82
+        }
+      ]
+    },
+    {
+      "element_id": "618485",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "841361",
+          "system_name": "MG 62",
+          "distance_ft": 16.65
+        },
+        {
+          "element_id": "841760",
+          "system_name": "OX 63",
+          "distance_ft": 20.0
+        },
+        {
+          "element_id": "841632",
+          "system_name": "SV 61",
+          "distance_ft": 20.12
+        }
+      ]
+    },
+    {
+      "element_id": "618486",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619755",
+          "system_name": "SA 1",
+          "distance_ft": 3.56
+        },
+        {
+          "element_id": "827506",
+          "system_name": "SA 1",
+          "distance_ft": 9.29
+        },
+        {
+          "element_id": "827737",
+          "system_name": "SA 1",
+          "distance_ft": 10.63
+        }
+      ]
+    },
+    {
+      "element_id": "618487",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "618580",
+          "system_name": "VAV-1-5",
+          "distance_ft": 8.56
+        },
+        {
+          "element_id": "618577",
+          "system_name": "VAV-1-6",
+          "distance_ft": 10.7
+        },
+        {
+          "element_id": "827969",
+          "system_name": "VAV-1-5",
+          "distance_ft": 10.87
+        }
+      ]
+    },
+    {
+      "element_id": "618488",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "618577",
+          "system_name": "VAV-1-6",
+          "distance_ft": 4.8
+        },
+        {
+          "element_id": "666197",
+          "system_name": "VAV-1-6",
+          "distance_ft": 6.29
+        },
+        {
+          "element_id": "666199",
+          "system_name": "VAV-1-6",
+          "distance_ft": 7.16
+        }
+      ]
+    },
+    {
+      "element_id": "618489",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "620280",
+          "system_name": "Mechanical Supply Air 20",
+          "distance_ft": 4.73
+        },
+        {
+          "element_id": "618335",
+          "system_name": "Mechanical Supply Air 21",
+          "distance_ft": 8.71
+        },
+        {
+          "element_id": "663080",
+          "system_name": "Mechanical Supply Air 21",
+          "distance_ft": 9.34
+        }
+      ]
+    },
+    {
+      "element_id": "618490",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "620280",
+          "system_name": "Mechanical Supply Air 20",
+          "distance_ft": 4.24
+        },
+        {
+          "element_id": "618335",
+          "system_name": "Mechanical Supply Air 21",
+          "distance_ft": 8.26
+        },
+        {
+          "element_id": "663080",
+          "system_name": "Mechanical Supply Air 21",
+          "distance_ft": 8.93
+        }
+      ]
+    },
+    {
+      "element_id": "618491",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619581",
+          "system_name": "SA 94",
+          "distance_ft": 5.41
+        },
+        {
+          "element_id": "835655",
+          "system_name": "SA 94",
+          "distance_ft": 5.67
+        },
+        {
+          "element_id": "619057",
+          "system_name": "Mechanical Supply Air 25",
+          "distance_ft": 5.74
+        }
+      ]
+    },
+    {
+      "element_id": "618493",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "835800",
+          "system_name": "Mechanical Supply Air 25",
+          "distance_ft": 5.73
+        },
+        {
+          "element_id": "619052",
+          "system_name": "Mechanical Supply Air 25",
+          "distance_ft": 6.71
+        },
+        {
+          "element_id": "620188",
+          "system_name": "Mechanical Supply Air 25",
+          "distance_ft": 6.81
+        }
+      ]
+    },
+    {
+      "element_id": "618494",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "620190",
+          "system_name": "Mechanical Supply Air 25",
+          "distance_ft": 5.18
+        },
+        {
+          "element_id": "835805",
+          "system_name": "Mechanical Supply Air 25",
+          "distance_ft": 5.51
+        },
+        {
+          "element_id": "667871",
+          "system_name": "Mechanical Supply Air 25",
+          "distance_ft": 5.56
+        }
+      ]
+    },
+    {
+      "element_id": "618495",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "620192",
+          "system_name": "Mechanical Supply Air 25",
+          "distance_ft": 5.18
+        },
+        {
+          "element_id": "667833",
+          "system_name": "Mechanical Supply Air 25",
+          "distance_ft": 5.59
+        },
+        {
+          "element_id": "663246",
+          "system_name": "Mechanical Supply Air 25",
+          "distance_ft": 5.6
+        }
+      ]
+    },
+    {
+      "element_id": "618496",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619046",
+          "system_name": "Mechanical Supply Air 28",
+          "distance_ft": 6.12
+        },
+        {
+          "element_id": "618534",
+          "system_name": "Mechanical Supply Air 28",
+          "distance_ft": 9.59
+        },
+        {
+          "element_id": "836053",
+          "system_name": "SA 94",
+          "distance_ft": 9.64
+        }
+      ]
+    },
+    {
+      "element_id": "618497",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "618534",
+          "system_name": "Mechanical Supply Air 28",
+          "distance_ft": 5.66
+        },
+        {
+          "element_id": "663459",
+          "system_name": "Mechanical Supply Air 28",
+          "distance_ft": 6.38
+        },
+        {
+          "element_id": "620200",
+          "system_name": "Mechanical Supply Air 28",
+          "distance_ft": 6.89
+        }
+      ]
+    },
+    {
+      "element_id": "618498",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "836355",
+          "system_name": "SA 94",
+          "distance_ft": 6.4
+        },
+        {
+          "element_id": "667780",
+          "system_name": "Mechanical Supply Air 28",
+          "distance_ft": 6.58
+        },
+        {
+          "element_id": "667778",
+          "system_name": "Mechanical Supply Air 28",
+          "distance_ft": 6.64
+        }
+      ]
+    },
+    {
+      "element_id": "618499",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "836355",
+          "system_name": "SA 94",
+          "distance_ft": 5.53
+        },
+        {
+          "element_id": "619560",
+          "system_name": "SA 94",
+          "distance_ft": 5.75
+        },
+        {
+          "element_id": "836356",
+          "system_name": "SA 94",
+          "distance_ft": 6.05
+        }
+      ]
+    },
+    {
+      "element_id": "618501",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "620202",
+          "system_name": "Mechanical Supply Air 30",
+          "distance_ft": 5.04
+        },
+        {
+          "element_id": "836373",
+          "system_name": "Mechanical Supply Air 30",
+          "distance_ft": 5.73
+        },
+        {
+          "element_id": "667741",
+          "system_name": "Mechanical Supply Air 30",
+          "distance_ft": 5.85
+        }
+      ]
+    },
+    {
+      "element_id": "618502",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "836386",
+          "system_name": "Mechanical Supply Air 30",
+          "distance_ft": 5.88
+        },
+        {
+          "element_id": "620204",
+          "system_name": "Mechanical Supply Air 30",
+          "distance_ft": 6.58
+        },
+        {
+          "element_id": "664090",
+          "system_name": "Mechanical Supply Air 30",
+          "distance_ft": 6.73
+        }
+      ]
+    },
+    {
+      "element_id": "618503",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "620210",
+          "system_name": "Mechanical Supply Air 30",
+          "distance_ft": 5.24
+        },
+        {
+          "element_id": "664096",
+          "system_name": "Mechanical Supply Air 30",
+          "distance_ft": 5.6
+        },
+        {
+          "element_id": "618540",
+          "system_name": "Mechanical Supply Air 30",
+          "distance_ft": 5.66
+        }
+      ]
+    },
+    {
+      "element_id": "618504",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "620212",
+          "system_name": "Mechanical Supply Air 30",
+          "distance_ft": 5.37
+        },
+        {
+          "element_id": "664098",
+          "system_name": "Mechanical Supply Air 30",
+          "distance_ft": 5.58
+        },
+        {
+          "element_id": "618541",
+          "system_name": "Mechanical Supply Air 30",
+          "distance_ft": 5.66
+        }
+      ]
+    },
+    {
+      "element_id": "618506",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "618919",
+          "system_name": "Mechanical Supply Air 31",
+          "distance_ft": 4.93
+        },
+        {
+          "element_id": "834837",
+          "system_name": "Mechanical Supply Air 31",
+          "distance_ft": 5.25
+        },
+        {
+          "element_id": "835251",
+          "system_name": "Mechanical Supply Air 31",
+          "distance_ft": 5.59
+        }
+      ]
+    },
+    {
+      "element_id": "618512",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619502",
+          "system_name": "Mechanical Supply Air 9",
+          "distance_ft": 3.69
+        },
+        {
+          "element_id": "832490",
+          "system_name": "Mechanical Supply Air 9",
+          "distance_ft": 4.73
+        },
+        {
+          "element_id": "619357",
+          "system_name": "Mechanical Supply Air 9",
+          "distance_ft": 6.05
+        }
+      ]
+    },
+    {
+      "element_id": "618513",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619507",
+          "system_name": "Mechanical Supply Air 9",
+          "distance_ft": 3.31
+        },
+        {
+          "element_id": "833102",
+          "system_name": "Mechanical Supply Air 9",
+          "distance_ft": 3.57
+        },
+        {
+          "element_id": "833101",
+          "system_name": "Mechanical Supply Air 9",
+          "distance_ft": 3.91
+        }
+      ]
+    },
+    {
+      "element_id": "618514",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "831667",
+          "system_name": "Mechanical Supply Air 9",
+          "distance_ft": 4.61
+        },
+        {
+          "element_id": "619457",
+          "system_name": "Mechanical Supply Air 9",
+          "distance_ft": 4.63
+        },
+        {
+          "element_id": "831665",
+          "system_name": "Mechanical Supply Air 9",
+          "distance_ft": 4.98
+        }
+      ]
+    },
+    {
+      "element_id": "618515",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "668375",
+          "system_name": "Mechanical Supply Air 18",
+          "distance_ft": 11.94
+        },
+        {
+          "element_id": "662975",
+          "system_name": "Mechanical Supply Air 18",
+          "distance_ft": 11.96
+        },
+        {
+          "element_id": "618342",
+          "system_name": "Mechanical Supply Air 18",
+          "distance_ft": 12.0
+        }
+      ]
+    },
+    {
+      "element_id": "618516",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "835800",
+          "system_name": "Mechanical Supply Air 25",
+          "distance_ft": 4.22
+        },
+        {
+          "element_id": "619053",
+          "system_name": "Mechanical Supply Air 25",
+          "distance_ft": 5.63
+        },
+        {
+          "element_id": "619052",
+          "system_name": "Mechanical Supply Air 25",
+          "distance_ft": 6.75
+        }
+      ]
+    },
+    {
+      "element_id": "618517",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619585",
+          "system_name": "SA 94",
+          "distance_ft": 7.8
+        },
+        {
+          "element_id": "835407",
+          "system_name": "SA 94",
+          "distance_ft": 11.2
+        },
+        {
+          "element_id": "668157",
+          "system_name": "Mechanical Supply Air 19",
+          "distance_ft": 12.97
+        }
+      ]
+    },
+    {
+      "element_id": "618518",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "836095",
+          "system_name": "SA 94",
+          "distance_ft": 3.44
+        },
+        {
+          "element_id": "619565",
+          "system_name": "SA 94",
+          "distance_ft": 4.34
+        },
+        {
+          "element_id": "836053",
+          "system_name": "SA 94",
+          "distance_ft": 5.02
+        }
+      ]
+    },
+    {
+      "element_id": "618519",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619757",
+          "system_name": "VAV-1-4",
+          "distance_ft": 10.0
+        },
+        {
+          "element_id": "619765",
+          "system_name": "VAV-1-4",
+          "distance_ft": 11.84
+        },
+        {
+          "element_id": "619764",
+          "system_name": "VAV-1-4",
+          "distance_ft": 13.58
+        }
+      ]
+    },
+    {
+      "element_id": "618520",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "827414",
+          "system_name": "SA 1",
+          "distance_ft": 4.77
+        },
+        {
+          "element_id": "619740",
+          "system_name": "SA 1",
+          "distance_ft": 4.89
+        },
+        {
+          "element_id": "827412",
+          "system_name": "SA 1",
+          "distance_ft": 5.3
+        }
+      ]
+    },
+    {
+      "element_id": "618521",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619806",
+          "system_name": "SA 1",
+          "distance_ft": 6.47
+        },
+        {
+          "element_id": "618459",
+          "system_name": "VAV-1-10",
+          "distance_ft": 10.66
+        },
+        {
+          "element_id": "656666",
+          "system_name": "VAV-1-10",
+          "distance_ft": 10.66
+        }
+      ]
+    },
+    {
+      "element_id": "618522",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "828348",
+          "system_name": "Mechanical Exhaust Air 1",
+          "distance_ft": 6.87
+        },
+        {
+          "element_id": "620005",
+          "system_name": "Mechanical Exhaust Air 1",
+          "distance_ft": 7.38
+        },
+        {
+          "element_id": "825916",
+          "system_name": "VAV-1-13",
+          "distance_ft": 8.27
+        }
+      ]
+    },
+    {
+      "element_id": "618523",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "668706",
+          "system_name": "Mechanical Supply Air 11",
+          "distance_ft": 4.34
+        },
+        {
+          "element_id": "618943",
+          "system_name": "Mechanical Supply Air 11",
+          "distance_ft": 4.63
+        },
+        {
+          "element_id": "830748",
+          "system_name": "Mechanical Supply Air 11",
+          "distance_ft": 4.8
+        }
+      ]
+    },
+    {
+      "element_id": "618543",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619551",
+          "system_name": "Mechanical Supply Air 31",
+          "distance_ft": 3.74
+        },
+        {
+          "element_id": "835063",
+          "system_name": "Mechanical Supply Air 30",
+          "distance_ft": 4.03
+        },
+        {
+          "element_id": "835143",
+          "system_name": "Mechanical Supply Air 31",
+          "distance_ft": 4.1
+        }
+      ]
+    },
+    {
+      "element_id": "618544",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "618400",
+          "system_name": "VAV-1-11",
+          "distance_ft": 9.11
+        },
+        {
+          "element_id": "660671",
+          "system_name": "VAV-1-11",
+          "distance_ft": 9.21
+        },
+        {
+          "element_id": "660679",
+          "system_name": "VAV-1-11",
+          "distance_ft": 9.69
+        }
+      ]
+    },
+    {
+      "element_id": "619291",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619330",
+          "system_name": "Mechanical Supply Air 13",
+          "distance_ft": 6.56
+        },
+        {
+          "element_id": "619670",
+          "system_name": "Mechanical Return Air 2",
+          "distance_ft": 6.83
+        },
+        {
+          "element_id": "662667",
+          "system_name": "Mechanical Supply Air 13",
+          "distance_ft": 7.12
+        }
+      ]
+    },
+    {
+      "element_id": "619858",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "824516",
+          "system_name": "SA 94",
+          "distance_ft": 4.12
+        },
+        {
+          "element_id": "619854",
+          "system_name": "SA 94",
+          "distance_ft": 4.26
+        },
+        {
+          "element_id": "619711",
+          "system_name": "Mechanical Supply Air 2",
+          "distance_ft": 4.59
+        }
+      ]
+    },
+    {
+      "element_id": "619859",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619971",
+          "system_name": "Mechanical Return Air 1",
+          "distance_ft": 7.07
+        },
+        {
+          "element_id": "822862",
+          "system_name": "Mechanical Return Air 1",
+          "distance_ft": 7.36
+        },
+        {
+          "element_id": "824155",
+          "system_name": "Mechanical Return Air 1",
+          "distance_ft": 7.99
+        }
+      ]
+    },
+    {
+      "element_id": "619860",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "618422",
+          "system_name": "Mechanical Supply Air 4",
+          "distance_ft": 15.75
+        },
+        {
+          "element_id": "661997",
+          "system_name": "Mechanical Supply Air 4",
+          "distance_ft": 15.93
+        },
+        {
+          "element_id": "667453",
+          "system_name": "Mechanical Supply Air 4",
+          "distance_ft": 16.74
+        }
+      ]
+    },
+    {
+      "element_id": "619861",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "619805",
+          "system_name": "SA 1",
+          "distance_ft": 3.52
+        },
+        {
+          "element_id": "826330",
+          "system_name": "SA 1",
+          "distance_ft": 3.53
+        },
+        {
+          "element_id": "826433",
+          "system_name": "SA 1",
+          "distance_ft": 3.95
+        }
+      ]
+    },
+    {
+      "element_id": "619862",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "618438",
+          "system_name": "VAV-1-12",
+          "distance_ft": 10.2
+        },
+        {
+          "element_id": "660961",
+          "system_name": "VAV-1-12",
+          "distance_ft": 10.29
+        },
+        {
+          "element_id": "660969",
+          "system_name": "VAV-1-12",
+          "distance_ft": 10.72
+        }
+      ]
+    },
+    {
+      "element_id": "619864",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "618435",
+          "system_name": "VAV-1-12",
+          "distance_ft": 6.95
+        },
+        {
+          "element_id": "660898",
+          "system_name": "VAV-1-12",
+          "distance_ft": 7.09
+        },
+        {
+          "element_id": "660906",
+          "system_name": "VAV-1-12",
+          "distance_ft": 7.7
+        }
+      ]
+    },
+    {
+      "element_id": "619865",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "827506",
+          "system_name": "SA 1",
+          "distance_ft": 5.01
+        },
+        {
+          "element_id": "619755",
+          "system_name": "SA 1",
+          "distance_ft": 7.27
+        },
+        {
+          "element_id": "619735",
+          "system_name": "SA 1",
+          "distance_ft": 7.76
+        }
+      ]
+    },
+    {
+      "element_id": "619866",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "827909",
+          "system_name": "VAV-1-6",
+          "distance_ft": 4.86
+        },
+        {
+          "element_id": "666199",
+          "system_name": "VAV-1-6",
+          "distance_ft": 5.03
+        },
+        {
+          "element_id": "618578",
+          "system_name": "VAV-1-6",
+          "distance_ft": 5.26
+        }
+      ]
+    },
+    {
+      "element_id": "708701",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "726262",
+          "system_name": "SA 4",
+          "distance_ft": 8.66
+        },
+        {
+          "element_id": "726814",
+          "system_name": "Mechanical Supply Air 26",
+          "distance_ft": 8.85
+        },
+        {
+          "element_id": "726576",
+          "system_name": "SA 4",
+          "distance_ft": 9.03
+        }
+      ]
+    },
+    {
+      "element_id": "708715",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "840666",
+          "system_name": "SA 17",
+          "distance_ft": 7.78
+        },
+        {
+          "element_id": "840631",
+          "system_name": "SA 17",
+          "distance_ft": 9.11
+        },
+        {
+          "element_id": "840648",
+          "system_name": "SA 17",
+          "distance_ft": 9.64
+        }
+      ]
+    },
+    {
+      "element_id": "708717",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "840669",
+          "system_name": "SA 17",
+          "distance_ft": 6.06
+        },
+        {
+          "element_id": "710756",
+          "system_name": "SA 17",
+          "distance_ft": 7.34
+        },
+        {
+          "element_id": "729684",
+          "system_name": "SA 17",
+          "distance_ft": 7.41
+        }
+      ]
+    },
+    {
+      "element_id": "708728",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "709148",
+          "system_name": "SA 17",
+          "distance_ft": 6.63
+        },
+        {
+          "element_id": "840156",
+          "system_name": "SA 17",
+          "distance_ft": 8.58
+        },
+        {
+          "element_id": "840485",
+          "system_name": "SA 17",
+          "distance_ft": 8.81
+        }
+      ]
+    },
+    {
+      "element_id": "708733",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "839780",
+          "system_name": "SA 94",
+          "distance_ft": 3.52
+        },
+        {
+          "element_id": "709956",
+          "system_name": "SA 94",
+          "distance_ft": 5.97
+        },
+        {
+          "element_id": "726813",
+          "system_name": "SA 94",
+          "distance_ft": 6.37
+        }
+      ]
+    },
+    {
+      "element_id": "708738",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "726698",
+          "system_name": "SA 32",
+          "distance_ft": 8.61
+        },
+        {
+          "element_id": "709539",
+          "system_name": "SA 38",
+          "distance_ft": 8.67
+        },
+        {
+          "element_id": "726753",
+          "system_name": "SA 38",
+          "distance_ft": 9.21
+        }
+      ]
+    },
+    {
+      "element_id": "708741",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "839802",
+          "system_name": "SA 32",
+          "distance_ft": 8.0
+        },
+        {
+          "element_id": "839800",
+          "system_name": "SA 38",
+          "distance_ft": 8.51
+        },
+        {
+          "element_id": "728785",
+          "system_name": "SA 32",
+          "distance_ft": 8.81
+        }
+      ]
+    },
+    {
+      "element_id": "708746",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "726701",
+          "system_name": "SA 32",
+          "distance_ft": 3.88
+        },
+        {
+          "element_id": "709258",
+          "system_name": "SA 32",
+          "distance_ft": 4.85
+        },
+        {
+          "element_id": "728682",
+          "system_name": "SA 32",
+          "distance_ft": 5.97
+        }
+      ]
+    },
+    {
+      "element_id": "708749",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "709312",
+          "system_name": "SA 43",
+          "distance_ft": 6.14
+        },
+        {
+          "element_id": "839636",
+          "system_name": "SA 43",
+          "distance_ft": 6.25
+        },
+        {
+          "element_id": "726722",
+          "system_name": "SA 43",
+          "distance_ft": 6.54
+        }
+      ]
+    },
+    {
+      "element_id": "708750",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "710554",
+          "system_name": "Mechanical Exhaust Air 4",
+          "distance_ft": 7.4
+        },
+        {
+          "element_id": "709316",
+          "system_name": "SA 44",
+          "distance_ft": 9.46
+        },
+        {
+          "element_id": "839655",
+          "system_name": "SA 44",
+          "distance_ft": 9.54
+        }
+      ]
+    },
+    {
+      "element_id": "708758",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "709396",
+          "system_name": "SA 51",
+          "distance_ft": 7.56
+        },
+        {
+          "element_id": "839760",
+          "system_name": "SA 51",
+          "distance_ft": 7.63
+        },
+        {
+          "element_id": "839759",
+          "system_name": "SA 51",
+          "distance_ft": 7.84
+        }
+      ]
+    },
+    {
+      "element_id": "708767",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "709464",
+          "system_name": "SA 56",
+          "distance_ft": 7.1
+        },
+        {
+          "element_id": "709926",
+          "system_name": "SA 94",
+          "distance_ft": 8.99
+        },
+        {
+          "element_id": "838989",
+          "system_name": "SA 56",
+          "distance_ft": 9.75
+        }
+      ]
+    },
+    {
+      "element_id": "708770",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "727993",
+          "system_name": "SA 59",
+          "distance_ft": 3.71
+        },
+        {
+          "element_id": "710666",
+          "system_name": "SA 59",
+          "distance_ft": 3.99
+        },
+        {
+          "element_id": "726741",
+          "system_name": "SA 59",
+          "distance_ft": 4.39
+        }
+      ]
+    },
+    {
+      "element_id": "708774",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "709495",
+          "system_name": "SA 63",
+          "distance_ft": 4.43
+        },
+        {
+          "element_id": "838973",
+          "system_name": "SA 63",
+          "distance_ft": 4.97
+        },
+        {
+          "element_id": "709937",
+          "system_name": "SA 63",
+          "distance_ft": 5.55
+        }
+      ]
+    },
+    {
+      "element_id": "708778",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "838807",
+          "system_name": "SA 66",
+          "distance_ft": 5.88
+        },
+        {
+          "element_id": "838800",
+          "system_name": "SA 66",
+          "distance_ft": 6.35
+        },
+        {
+          "element_id": "726728",
+          "system_name": "SA 66",
+          "distance_ft": 6.56
+        }
+      ]
+    },
+    {
+      "element_id": "708794",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "709281",
+          "system_name": "SA 31",
+          "distance_ft": 5.7
+        },
+        {
+          "element_id": "726709",
+          "system_name": "SA 31",
+          "distance_ft": 6.07
+        },
+        {
+          "element_id": "839839",
+          "system_name": "SA 31",
+          "distance_ft": 6.55
+        }
+      ]
+    },
+    {
+      "element_id": "708825",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "709566",
+          "system_name": "SA 108",
+          "distance_ft": 3.83
+        },
+        {
+          "element_id": "841110",
+          "system_name": "SA 108",
+          "distance_ft": 3.84
+        },
+        {
+          "element_id": "709568",
+          "system_name": "SA 108",
+          "distance_ft": 6.21
+        }
+      ]
+    },
+    {
+      "element_id": "708827",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "709604",
+          "system_name": "SA 110",
+          "distance_ft": 5.52
+        },
+        {
+          "element_id": "841068",
+          "system_name": "SA 110",
+          "distance_ft": 6.06
+        },
+        {
+          "element_id": "709574",
+          "system_name": "SA 110",
+          "distance_ft": 7.6
+        }
+      ]
+    },
+    {
+      "element_id": "708832",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "841162",
+          "system_name": "SA 114",
+          "distance_ft": 3.81
+        },
+        {
+          "element_id": "991473",
+          "system_name": "SA 1",
+          "distance_ft": 4.04
+        },
+        {
+          "element_id": "709570",
+          "system_name": "SA 114",
+          "distance_ft": 4.65
+        }
+      ]
+    },
+    {
+      "element_id": "708834",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "709573",
+          "system_name": "SA 116",
+          "distance_ft": 6.41
+        },
+        {
+          "element_id": "836927",
+          "system_name": "SA 116",
+          "distance_ft": 7.5
+        },
+        {
+          "element_id": "991473",
+          "system_name": "SA 1",
+          "distance_ft": 7.81
+        }
+      ]
+    },
+    {
+      "element_id": "708838",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "709575",
+          "system_name": "SA 118",
+          "distance_ft": 6.45
+        },
+        {
+          "element_id": "841731",
+          "system_name": "OX 63",
+          "distance_ft": 6.67
+        },
+        {
+          "element_id": "841659",
+          "system_name": "SV 61",
+          "distance_ft": 7.14
+        }
+      ]
+    },
+    {
+      "element_id": "708842",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "709829",
+          "system_name": "SA 121",
+          "distance_ft": 7.03
+        },
+        {
+          "element_id": "841423",
+          "system_name": "MG 62",
+          "distance_ft": 7.79
+        },
+        {
+          "element_id": "708840",
+          "system_name": "SA 120",
+          "distance_ft": 8.0
+        }
+      ]
+    },
+    {
+      "element_id": "708843",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "730030",
+          "system_name": "SA 121",
+          "distance_ft": 4.72
+        },
+        {
+          "element_id": "730032",
+          "system_name": "SA 121",
+          "distance_ft": 4.95
+        },
+        {
+          "element_id": "710836",
+          "system_name": "SA 121",
+          "distance_ft": 5.43
+        }
+      ]
+    },
+    {
+      "element_id": "708846",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "837719",
+          "system_name": "SA 123",
+          "distance_ft": 4.17
+        },
+        {
+          "element_id": "710399",
+          "system_name": "Mechanical Return Air 1",
+          "distance_ft": 5.32
+        },
+        {
+          "element_id": "710858",
+          "system_name": "SA 123",
+          "distance_ft": 5.42
+        }
+      ]
+    },
+    {
+      "element_id": "708849",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "726775",
+          "system_name": "SA 123",
+          "distance_ft": 6.91
+        },
+        {
+          "element_id": "709656",
+          "system_name": "SA 123",
+          "distance_ft": 7.07
+        },
+        {
+          "element_id": "730320",
+          "system_name": "SA 123",
+          "distance_ft": 7.48
+        }
+      ]
+    },
+    {
+      "element_id": "708864",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "924110",
+          "system_name": "OX 63",
+          "distance_ft": 5.75
+        },
+        {
+          "element_id": "837526",
+          "system_name": "SA 94",
+          "distance_ft": 6.04
+        },
+        {
+          "element_id": "710288",
+          "system_name": "SA 94",
+          "distance_ft": 6.94
+        }
+      ]
+    },
+    {
+      "element_id": "708865",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "921280",
+          "system_name": "MG 62",
+          "distance_ft": 2.7
+        },
+        {
+          "element_id": "927475",
+          "system_name": "MG 62",
+          "distance_ft": 2.75
+        },
+        {
+          "element_id": "841480",
+          "system_name": "MG 62",
+          "distance_ft": 2.76
+        }
+      ]
+    },
+    {
+      "element_id": "708866",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "841500",
+          "system_name": "MG 62",
+          "distance_ft": 5.69
+        },
+        {
+          "element_id": "837976",
+          "system_name": "SA 136",
+          "distance_ft": 14.31
+        },
+        {
+          "element_id": "838008",
+          "system_name": "SA 94",
+          "distance_ft": 14.62
+        }
+      ]
+    },
+    {
+      "element_id": "708868",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "710260",
+          "system_name": "SA 94",
+          "distance_ft": 3.85
+        },
+        {
+          "element_id": "923970",
+          "system_name": "MG 62",
+          "distance_ft": 4.16
+        },
+        {
+          "element_id": "841535",
+          "system_name": "MG 62",
+          "distance_ft": 4.18
+        }
+      ]
+    },
+    {
+      "element_id": "708878",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "710267",
+          "system_name": "SA 94",
+          "distance_ft": 4.52
+        },
+        {
+          "element_id": "726892",
+          "system_name": "SA 94",
+          "distance_ft": 5.12
+        },
+        {
+          "element_id": "710283",
+          "system_name": "SA 94",
+          "distance_ft": 5.71
+        }
+      ]
+    },
+    {
+      "element_id": "708880",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "946166",
+          "system_name": "SA 94",
+          "distance_ft": 4.4
+        },
+        {
+          "element_id": "709801",
+          "system_name": "SA 94",
+          "distance_ft": 4.43
+        },
+        {
+          "element_id": "710276",
+          "system_name": "SA 94",
+          "distance_ft": 4.58
+        }
+      ]
+    },
+    {
+      "element_id": "708890",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "709632",
+          "system_name": "SA 156",
+          "distance_ft": 5.92
+        },
+        {
+          "element_id": "837439",
+          "system_name": "SA 156",
+          "distance_ft": 9.67
+        },
+        {
+          "element_id": "708889",
+          "system_name": "SA 156",
+          "distance_ft": 10.0
+        }
+      ]
+    },
+    {
+      "element_id": "708892",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "709648",
+          "system_name": "SA 158",
+          "distance_ft": 3.97
+        },
+        {
+          "element_id": "726772",
+          "system_name": "SA 158",
+          "distance_ft": 4.27
+        },
+        {
+          "element_id": "837694",
+          "system_name": "SA 158",
+          "distance_ft": 4.36
+        }
+      ]
+    },
+    {
+      "element_id": "708895",
+      "category": "Air Terminals",
+      "family": "Return Diffuser - Hosted",
+      "type": "Unknown",
+      "level": "",
+      "nearest_elements": [
+        {
+          "element_id": "708856",
+          "system_name": "SA 131",
+          "distance_ft": 11.24
+        },
+        {
+          "element_id": "723615",
+          "system_name": "SA 131",
+          "distance_ft": 11.28
+        },
+        {
+          "element_id": "710822",
+          "system_name": "SA 131",
+          "distance_ft": 12.14
+        }
+      ]
+    }
+  ],
+  "_meta": {
+    "total_systems": 1119,
+    "total_elements": 0,
+    "total_orphans": 749
+  }
+}
