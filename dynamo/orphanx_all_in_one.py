@@ -235,26 +235,36 @@ def _serialize_element(elem):
     }
 
 # System type maps
-_DUCT_TYPE_MAP = {
-    DuctSystemType.SupplyAir: ("SupplyAir", "Mechanical"),
-    DuctSystemType.ReturnAir: ("ReturnAir", "Mechanical"),
-    DuctSystemType.ExhaustAir: ("Exhaust", "Mechanical"),
-    DuctSystemType.OtherAir: ("Other", "Mechanical"),
-}
-_PIPE_TYPE_MAP = {
-    PipeSystemType.DomesticHotWater: ("DomesticHotWater", "Plumbing"),
-    PipeSystemType.DomesticColdWater: ("DomesticColdWater", "Plumbing"),
-    PipeSystemType.Sanitary: ("SanitaryWaste", "Plumbing"),
-    PipeSystemType.Storm: ("Storm", "Plumbing"),
-    PipeSystemType.Hydronic: ("Hydronic", "Mechanical"),
-    PipeSystemType.HydronicReturn: ("Hydronic", "Mechanical"),
-    PipeSystemType.HydronicSupply: ("Hydronic", "Mechanical"),
-    PipeSystemType.OtherPipe: ("Other", "Plumbing"),
-    PipeSystemType.FireProtectWet: ("Sprinkler", "FireProtection"),
-    PipeSystemType.FireProtectDry: ("Sprinkler", "FireProtection"),
-    PipeSystemType.FireProtectPreaction: ("Sprinkler", "FireProtection"),
-    PipeSystemType.FireProtectOther: ("Sprinkler", "FireProtection"),
-}
+_DUCT_TYPE_MAP = {}
+for _attr, _val in [
+    ("SupplyAir", ("SupplyAir", "Mechanical")),
+    ("ReturnAir", ("ReturnAir", "Mechanical")),
+    ("ExhaustAir", ("Exhaust", "Mechanical")),
+    ("OtherAir", ("Other", "Mechanical")),
+]:
+    try:
+        _DUCT_TYPE_MAP[getattr(DuctSystemType, _attr)] = _val
+    except AttributeError:
+        pass
+_PIPE_TYPE_MAP = {}
+for _attr, _val in [
+    ("DomesticHotWater", ("DomesticHotWater", "Plumbing")),
+    ("DomesticColdWater", ("DomesticColdWater", "Plumbing")),
+    ("Sanitary", ("SanitaryWaste", "Plumbing")),
+    ("Storm", ("Storm", "Plumbing")),
+    ("Hydronic", ("Hydronic", "Mechanical")),
+    ("HydronicReturn", ("Hydronic", "Mechanical")),
+    ("HydronicSupply", ("Hydronic", "Mechanical")),
+    ("OtherPipe", ("Other", "Plumbing")),
+    ("FireProtectWet", ("Sprinkler", "FireProtection")),
+    ("FireProtectDry", ("Sprinkler", "FireProtection")),
+    ("FireProtectPreaction", ("Sprinkler", "FireProtection")),
+    ("FireProtectOther", ("Sprinkler", "FireProtection")),
+]:
+    try:
+        _PIPE_TYPE_MAP[getattr(PipeSystemType, _attr)] = _val
+    except AttributeError:
+        pass
 
 def _get_system_elements(system):
     elements = []
@@ -475,13 +485,15 @@ log("PHASE 3: Sending data to Orphan X AI server...")
 log("  Server: {}".format(MCP_URL))
 
 ctx = ssl.create_default_context()
+ctx.check_hostname = False
+ctx.verify_mode = ssl.CERT_NONE
 
 def call_mcp_tool(tool_name, arg_name, arg_value):
     """Call an MCP tool via SSE + JSON-RPC and return the result."""
     try:
         # Step 1: Get session from SSE endpoint
         sse_req = urllib.request.Request(MCP_URL + "/sse", method="GET")
-        sse_resp = urllib.request.urlopen(sse_req, timeout=10, context=ctx)
+        sse_resp = urllib.request.urlopen(sse_req, timeout=30, context=ctx)
         sse_data = sse_resp.read(500).decode("utf-8")
 
         endpoint = None
