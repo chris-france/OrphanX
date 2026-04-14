@@ -59,6 +59,7 @@ from RevitServices.Transactions import TransactionManager
 # CONFIG
 # ============================================================================
 MCP_URL = "https://orphanx.chrisfrance.ai"
+MCP_API_KEY = "oxkey-7357d0e2cc7ccbfb0ad88c2b50d52d07"
 BUILDING_TYPE = "hospital"
 VIEW_NAME = "Orphan X - QA Audit"
 MAX_NEAREST = 3
@@ -609,6 +610,7 @@ def call_mcp_tool(tool_name, arg_name, arg_value):
     try:
         # Step 1: Open SSE stream (keep open — responses come back here)
         sse_req = urllib.request.Request(MCP_URL + "/sse")
+        sse_req.add_header("Authorization", "Bearer " + MCP_API_KEY)
         sse_stream = urllib.request.urlopen(sse_req, timeout=120, context=ctx)
 
         endpoint = None
@@ -627,7 +629,10 @@ def call_mcp_tool(tool_name, arg_name, arg_value):
             req = urllib.request.Request(
                 full_url,
                 data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + MCP_API_KEY,
+                },
             )
             urllib.request.urlopen(req, timeout=10, context=ctx)
 

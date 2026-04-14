@@ -16,6 +16,8 @@ from prompts import AUDIT_SYSTEM_PROMPT, CLASSIFY_ORPHANS_PROMPT, REPORT_PROMPT
 
 load_dotenv()
 
+ORPHANX_API_KEY = os.environ.get("ORPHANX_API_KEY", "")
+
 mcp = FastMCP(
     "orphan-x",
     instructions="MEP Systems Auditor — analyzes Revit MEP models for orphaned elements, dead legs, incomplete systems, and patient safety hazards.",
@@ -182,4 +184,24 @@ Findings Data:
 
 
 if __name__ == "__main__":
-    mcp.run(transport="sse")
+    if ORPHANX_API_KEY:
+        import uvicorn
+        from starlette.middleware.base import BaseHTTPMiddleware
+        from starlette.responses import PlainTextResponse
+
+        class APIKeyAuth(BaseHTTPMiddleware):
+            async def dispatch(self, request, call_next):
+                key = request.headers.get("Authorization", "").replace("Bearer ", "")
+                if not key:
+                    key = request.headers.get("X-API-Key", "")
+                if key != ORPHANX_API_KEY:
+                    return PlainTextResponse("Unauthorized", status_code=401)
+                return await call_next(request)
+
+        app = mcp.sse_app()
+        app.add_middleware(APIKeyAuth)
+        print("Orphan X MCP server starting WITH API key auth on :8620")
+        uvicorn.run(app, host="0.0.0.0", port=8620)
+    else:
+        print("WARNING: No ORPHANX_API_KEY set — running WITHOUT auth")
+        mcp.run(transport="sse")
