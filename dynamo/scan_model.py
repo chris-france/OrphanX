@@ -293,30 +293,6 @@ if best_elems:
 # ============================================
 # 5. Check network access
 # ============================================
-log("--- NETWORK TEST ---")
-try:
-    import urllib.request
-    import ssl
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-    req = urllib.request.Request("https://orphanx.chrisfrance.ai/sse")
-    resp = urllib.request.urlopen(req, timeout=15, context=ctx)
-    # SSE is a streaming response — read line by line, not a fixed byte count
-    first_line = resp.readline().decode("utf-8").strip()
-    second_line = resp.readline().decode("utf-8").strip()
-    resp.close()
-    if "endpoint" in first_line or "endpoint" in second_line:
-        log("  orphanx.chrisfrance.ai: REACHABLE")
-        log("  Response: {} | {}".format(first_line, second_line))
-    else:
-        log("  orphanx.chrisfrance.ai: GOT RESPONSE BUT UNEXPECTED:")
-        log("    Line 1: {}".format(first_line))
-        log("    Line 2: {}".format(second_line))
-except Exception as ex:
-    log("  orphanx.chrisfrance.ai: UNREACHABLE ({})".format(str(ex)))
-
-log("")
 log("=" * 60)
 log("SCAN COMPLETE. Send this output to Chris.")
 log("=" * 60)
