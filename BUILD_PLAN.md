@@ -12,33 +12,32 @@
 
 ---
 
-## Machine Setup: Oskar + Ignacio Have Admin
+## Machine Setup
 
-Oskar and Ignacio have admin access and can install software. This eliminates our biggest risk (network connectivity). Strategy:
+### MCP Server: Cloud VPS (internet accessible)
 
-**Ignacio's machine = the demo machine.** Runs Dynamo + Revit + the MCP server locally. Agentic node connects to `localhost:8620`. No WiFi dependency.
+DevCon WiFi blocks device-to-device traffic. The MCP server runs on a cloud VPS that everyone can reach over the internet.
 
-### Install on Ignacio's machine (first thing):
-```powershell
-# Python 3.12
-winget install Python.Python.3.12
+- **MCP Server URL:** `http://162.243.184.115:8620/sse`
+- **Health check:** `http://162.243.184.115:8620/health`
+- **OS:** Ubuntu 24.04 LTS, Python 3.12
+- **Chris manages** — SSH access, deploys code, holds the Anthropic API key
 
-# Git (to pull from repo)
-winget install Git.Git
+Dynamo agentic nodes connect to `http://162.243.184.115:8620/sse`. Standard outbound HTTPS — works from any network.
 
-# Then in a terminal:
-git clone https://github.com/ibenitosoto/OrphanX.git
-cd OrphanX/server
-python -m venv venv
-venv\Scripts\activate
-pip install fastmcp anthropic fastapi uvicorn requests
-```
+### Windows Machines (Ignacio, Oskar, Petra)
 
-### Install on Oskar's machine (backup):
-Same setup. If Ignacio's machine has issues, Oskar's is ready to go.
+**No installs needed.** The MCP server is remote. They only need:
+- Revit (already installed)
+- Dynamo with beta agentic nodes (already enabled for hackathon)
 
-### Chris builds on Mac, pushes to GitHub, they pull.
-Chris writes all the code → pushes to repo → Ignacio/Oskar `git pull` → restart server. Fast iteration loop.
+That's it. The agentic node in Dynamo connects to `http://162.243.184.115:8620/sse` — just a URL. No Python, no Git, no dependencies on their machines.
+
+Oskar and Ignacio have admin if we need local installs as a fallback, but we shouldn't need them.
+
+### Iteration Loop
+Chris edits code on Mac → deploys to VPS via SSH (`scp` or direct edit) → live instantly.
+No push/pull on Windows. No restarts on their end. They just re-run the Dynamo graph.
 
 ---
 
@@ -195,12 +194,11 @@ Build the downstream Dynamo nodes that apply visual results:
 
 ## Phase 2: Integration (11:30 – 1:00, through lunch)
 
-### Network Setup (SIMPLIFIED — server runs locally)
-- MCP server runs on **Ignacio's machine** (same machine as Dynamo)
-- Agentic node connects to `http://localhost:8620/sse` — no WiFi dependency
-- Chris pushes code to GitHub → Ignacio runs `git pull` in the OrphanX folder → restarts server
-- **Oskar's machine is the backup** — same setup, ready to go if Ignacio's has issues
-- Only external network needed: Anthropic API (Claude) — standard HTTPS outbound
+### Network Setup
+- MCP server runs on **cloud VPS** (`162.243.184.115:8620`)
+- Dynamo agentic node connects to `http://162.243.184.115:8620/sse`
+- Standard outbound HTTPS — works from any network, no WiFi LAN issues
+- Chris deploys code changes via SSH — live instantly, no action needed on Windows machines
 
 ### Connect the Pipeline
 1. Agentic Node #1 extracts real system data from seeded model
@@ -275,7 +273,7 @@ If the live demo breaks (it's a hackathon — things break):
 |---|---|---|---|
 | Agentic nodes can't connect to external MCP | Medium | High | Fallback: Python Script node makes HTTP POST to localhost:8620 |
 | Revit MCP doesn't expose system/connectivity data | Medium | High | Fallback: Python Script node queries Revit API directly |
-| ~~Hackathon WiFi blocks inter-device traffic~~ | ~~High~~ | ~~Medium~~ | **ELIMINATED** — MCP server runs on same machine as Dynamo (localhost) |
+| ~~Hackathon WiFi blocks inter-device traffic~~ | ~~High~~ | ~~Medium~~ | **ELIMINATED** — MCP server runs on cloud VPS, accessible from any network |
 | AI produces false positives | Medium | Medium | MEP team reviews and tunes system prompt during Phase 3 |
 | Snowdon Towers lacks enough MEP data | Low | Medium | Use rme_advanced_sample_project.rvt instead, or seed more test cases |
 | .dyn graph generated on Mac doesn't open in Dynamo | Low | Medium | Team builds graph manually on Windows using Chris's node specs |
@@ -319,33 +317,28 @@ OrphanX/
 ## Network Diagram (Hackathon Setup)
 
 ```
-   Chris's Mac                 Ignacio's Windows Machine (DEMO MACHINE)
-┌──────────────┐            ┌──────────────────────────────────────┐
-│              │  git push  │                                      │
-│  Claude Code │───────────►│  Dynamo + Revit                      │
-│  (writes all │  git pull  │  ├── Agentic Nodes                   │
-│   the code)  │            │  ├── Python Scripts                   │
-│              │            │  └── View Overrides                   │
-└──────────────┘            │                                      │
-                            │  MCP Server (localhost:8620)          │
-                            │  ├── audit_systems                    │
-                            │  ├── classify_orphans                 │
-                            │  └── generate_report                  │
-                            └──────────────┬───────────────────────┘
-                                           │ HTTPS
-                                           ▼
-                            ┌──────────────────────────┐
-                            │  Anthropic API (Claude)   │
-                            └──────────────────────────┘
-
-   Oskar's Windows Machine (BACKUP)
-┌──────────────────────────────────────┐
-│  Same setup — ready if Ignacio's     │
-│  machine has issues                  │
-└──────────────────────────────────────┘
+   Chris's Mac                      Cloud VPS
+┌──────────────┐    SSH deploy    ┌──────────────────────────┐
+│              │─────────────────►│  MCP Server (port 8620)  │
+│  Claude Code │                  │  ├── audit_systems       │
+│  (writes all │                  │  ├── classify_orphans    │
+│   the code)  │                  │  └── generate_report     │
+└──────────────┘                  │                          │
+                                  │  Anthropic API key here  │
+                                  └────────────┬─────────────┘
+                                               │
+                              ┌────────────────┼────────────────┐
+                              │                │                │
+                              ▼                ▼                ▼
+                    ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+                    │  Ignacio     │ │  Oskar       │ │  Petra       │
+                    │  Dynamo+Revit│ │  Dynamo+Revit│ │  Dynamo+Revit│
+                    │  (demo mach) │ │  (backup)    │ │  (model prep)│
+                    └──────────────┘ └──────────────┘ └──────────────┘
+                    Agentic node → http://162.243.184.115:8620/sse
 ```
 
-**Code flow:** Chris writes code on Mac → pushes to GitHub → Ignacio/Oskar `git pull` → restart server. Fast iteration, no file transfers needed.
+**Code flow:** Chris edits on Mac → SSH deploys to VPS → live instantly. Windows team just re-runs the Dynamo graph.
 
 ---
 
