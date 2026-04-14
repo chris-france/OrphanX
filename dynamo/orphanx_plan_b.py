@@ -639,16 +639,25 @@ ctx = ssl.create_default_context()
 ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
-AUDIT_PROMPT = """You are an expert MEP systems integrity auditor for healthcare BIM models.
-Analyze MEP system data for dead legs, orphans, incomplete chains, and safety issues.
+AUDIT_PROMPT = """You are an expert MEP systems integrity auditor for a HOSPITAL BIM model.
+Analyze piping system data for dead legs, incomplete chains, missing components, and safety issues.
 
-DEAD LEG DETECTION: A pipe connected one end, dead-end other. In domestic water = stagnant water = Legionella.
-ASHRAE 188: dead legs >6x pipe diameter = stagnation risk. In hospitals = CRITICAL PATIENT SAFETY.
+## HOW TO DETECT ISSUES (connection data may be missing)
+
+Look at each system's element composition:
+- DEAD LEG: A domestic water system with Pipes but NO fixture at the end (no PlumbingFixtures, no equipment). Pipes going nowhere = stagnant water = Legionella. ASHRAE 188 violation. CRITICAL PATIENT SAFETY.
+- INCOMPLETE CHAIN: System has pipes/fittings but missing expected terminal elements (e.g., supply system with no diffusers/fixtures).
+- MISSING COMPONENT: Sanitary system without vents (IPC 901.2). Sprinkler branch without heads (NFPA 13).
+- DEAD END: Small system with only 1-3 pipe elements and no fixtures = likely dead-end branch.
+
+For each system, count the element categories. If a domestic water system has pipes but zero plumbing fixtures, that is a dead leg finding. If a sprinkler branch has pipes but no sprinkler heads, that is a missing coverage finding.
 
 SEVERITY: Critical-Patient Safety > Critical-Life Safety > Critical-Code Violation > Major > Minor
-FALSE POSITIVES: Skip capped stubs, FUTURE provisions, test ports, drain valves, backup circuits.
+FALSE POSITIVES: Skip systems named FUTURE or with fewer than 2 elements.
 
-Return ONLY valid JSON: {"findings": [{"system_id":"...", "system_name":"...", "finding_type":"dead_leg|orphan|incomplete_chain|dead_end|cross_connection|missing_component", "severity":"...", "description":"...", "affected_elements":["id",...], "recommendation":"...", "code_reference":"..."}]}"""
+You MUST return at least one finding if any domestic water system has pipes without fixtures.
+
+Return ONLY valid JSON: {"findings": [{"system_id":"...", "system_name":"...", "finding_type":"dead_leg|incomplete_chain|dead_end|missing_component", "severity":"...", "description":"2-3 sentences about what is wrong and patient risk", "affected_elements":["element_id",...], "recommendation":"...", "code_reference":"ASHRAE 188|NFPA 13|IPC 901.2|null"}]}"""
 
 CLASSIFY_PROMPT = """You are an MEP expert classifying orphaned Revit elements not in any system.
 For each: determine likely system, severity, action.
@@ -711,11 +720,12 @@ for s in systems_out:
     if s["system_type"] not in _PIPE_TYPES and s["discipline"] not in _PIPE_DISCIPLINES:
         continue
     slim_elems = [{"element_id": e["element_id"], "category": e.get("category", ""),
-                   "connected_to": e.get("connected_to", [])}
+                   "family": e.get("family", ""), "type": e.get("type", "")}
                   for e in s["elements"]]
     pipe_systems.append({
         "system_id": s["system_id"], "system_name": s["system_name"],
-        "system_type": s["system_type"], "elements": slim_elems,
+        "system_type": s["system_type"], "element_count": len(slim_elems),
+        "elements": slim_elems,
     })
 if pipe_systems:
     log("  Auditing {} piping systems (slim)...".format(len(pipe_systems)))
@@ -723,9 +733,12 @@ if pipe_systems:
         audit_payload = json.dumps({"building_type": BUILDING_TYPE, "systems": pipe_systems})
         user_msg = "Analyze these MEP systems. Return ONLY JSON with findings array.\n\n" + audit_payload
         raw = call_claude(AUDIT_PROMPT, user_msg)
+        log("  Claude response (first 500 chars): {}".format(raw[:500]))
         parsed = parse_json(raw)
         if parsed:
             audit_findings = parsed.get("findings", [])
+        else:
+            log("  WARNING: Could not parse Claude response as JSON")
         log("  Got {} audit findings".format(len(audit_findings)))
         for f in audit_findings:
             log("    [{}] {}: {}".format(
@@ -743,9 +756,12 @@ if orphans_out:
     try:
         user_msg = "Classify these orphans. Return ONLY JSON with classifications array.\n\n" + orphans_payload
         raw = call_claude(CLASSIFY_PROMPT, user_msg)
+        log("  Orphan response (first 500 chars): {}".format(raw[:500]))
         parsed = parse_json(raw)
         if parsed:
             orphan_classifications = parsed.get("classifications", [])
+        else:
+            log("  WARNING: Could not parse orphan response as JSON")
         log("  Got {} orphan classifications".format(len(orphan_classifications)))
     except Exception as ex:
         log("  ERROR calling Claude for orphans: {}".format(str(ex)))

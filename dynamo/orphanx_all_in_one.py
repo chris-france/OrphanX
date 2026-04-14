@@ -520,11 +520,12 @@ for s in systems_out:
     if s["system_type"] not in _PIPE_TYPES and s["discipline"] not in _PIPE_DISCIPLINES:
         continue
     slim_elems = [{"element_id": e["element_id"], "category": e.get("category", ""),
-                   "connected_to": e.get("connected_to", [])}
+                   "family": e.get("family", ""), "type": e.get("type", "")}
                   for e in s["elements"]]
     pipe_systems.append({
         "system_id": s["system_id"], "system_name": s["system_name"],
-        "system_type": s["system_type"], "elements": slim_elems,
+        "system_type": s["system_type"], "element_count": len(slim_elems),
+        "elements": slim_elems,
     })
 pipe_elements = sum(len(s["elements"]) for s in pipe_systems)
 log("  Sending {} piping systems with {} elements to AI (slim)".format(len(pipe_systems), pipe_elements))
