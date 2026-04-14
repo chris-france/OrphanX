@@ -908,4 +908,60 @@ log("")
 log("  Switch to view '{}' to see results.".format(VIEW_NAME))
 log("=" * 60)
 
+# ============================================================================
+# SAVE FILES TO DESKTOP
+# ============================================================================
+import os
+desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+
+# Save log file
+log_text = "\n".join(log_lines)
+try:
+    log_path = os.path.join(desktop, "orphanx_log.txt")
+    with open(log_path, "w") as f:
+        f.write(log_text)
+    log("Saved log to: {}".format(log_path))
+except Exception as ex:
+    log("Could not save log: {}".format(str(ex)))
+
+# Save full results as JSON (for debugging and Chris to analyze)
+results = {
+    "summary": {
+        "systems_found": len(systems_out),
+        "total_elements": total_elements,
+        "orphaned_elements": len(orphans_out),
+        "ai_findings": len(audit_findings),
+        "orphan_classifications": len(orphan_classifications),
+        "overrides_applied": overrides_applied,
+    },
+    "audit_findings": audit_findings,
+    "orphan_classifications": orphan_classifications,
+    "extraction_errors": errors[:20],
+}
+try:
+    results_path = os.path.join(desktop, "orphanx_results.json")
+    with open(results_path, "w") as f:
+        json.dump(results, f, indent=2)
+    log("Saved results to: {}".format(results_path))
+except Exception as ex:
+    log("Could not save results: {}".format(str(ex)))
+
+# Save raw extraction data (so Chris can run it through AI manually if needed)
+try:
+    extract_path = os.path.join(desktop, "orphanx_extraction.json")
+    with open(extract_path, "w") as f:
+        json.dump({
+            "building_type": BUILDING_TYPE,
+            "systems": systems_out[:50],
+            "orphans": orphans_out[:100],
+            "_meta": {
+                "total_systems": len(systems_out),
+                "total_elements": total_elements,
+                "total_orphans": len(orphans_out),
+            }
+        }, f, indent=2)
+    log("Saved extraction to: {}".format(extract_path))
+except Exception as ex:
+    log("Could not save extraction: {}".format(str(ex)))
+
 OUT = "\n".join(log_lines)
