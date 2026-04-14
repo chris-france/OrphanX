@@ -475,13 +475,15 @@ log("PHASE 3: Sending data to Orphan X AI server...")
 log("  Server: {}".format(MCP_URL))
 
 ctx = ssl.create_default_context()
+ctx.check_hostname = False
+ctx.verify_mode = ssl.CERT_NONE
 
 def call_mcp_tool(tool_name, arg_name, arg_value):
     """Call an MCP tool via SSE + JSON-RPC and return the result."""
     try:
         # Step 1: Get session from SSE endpoint
         sse_req = urllib.request.Request(MCP_URL + "/sse", method="GET")
-        sse_resp = urllib.request.urlopen(sse_req, timeout=10, context=ctx)
+        sse_resp = urllib.request.urlopen(sse_req, timeout=30, context=ctx)
         sse_data = sse_resp.read(500).decode("utf-8")
 
         endpoint = None
