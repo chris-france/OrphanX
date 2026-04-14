@@ -310,15 +310,17 @@ for _attr, _val in [
     ("DomesticHotWater", ("DomesticHotWater", "Plumbing")),
     ("DomesticColdWater", ("DomesticColdWater", "Plumbing")),
     ("Sanitary", ("SanitaryWaste", "Plumbing")),
-    ("Storm", ("Storm", "Plumbing")),
-    ("Hydronic", ("Hydronic", "Mechanical")),
-    ("HydronicReturn", ("Hydronic", "Mechanical")),
-    ("HydronicSupply", ("Hydronic", "Mechanical")),
+    ("Vent", ("Vent", "Plumbing")),
+    ("SupplyHydronic", ("Hydronic", "Mechanical")),
+    ("ReturnHydronic", ("Hydronic", "Mechanical")),
     ("OtherPipe", ("Other", "Plumbing")),
     ("FireProtectWet", ("Sprinkler", "FireProtection")),
     ("FireProtectDry", ("Sprinkler", "FireProtection")),
     ("FireProtectPreaction", ("Sprinkler", "FireProtection")),
     ("FireProtectOther", ("Sprinkler", "FireProtection")),
+    ("Fitting", ("Fitting", "Plumbing")),
+    ("Global", ("Global", "Plumbing")),
+    ("UndefinedSystemType", ("Other", "Plumbing")),
 ]:
     try:
         _enum = getattr(PipeSystemType, _attr)
@@ -326,6 +328,26 @@ for _attr, _val in [
         _PIPE_TYPE_MAP[int(_enum)] = _val
     except (AttributeError, TypeError, ValueError):
         pass
+# Hardcoded integer fallbacks — Revit 2026 may return raw ints instead of enums
+_PIPE_INT_FALLBACKS = {
+    0: ("Other", "Plumbing"),             # UndefinedSystemType
+    7: ("Hydronic", "Mechanical"),        # SupplyHydronic
+    8: ("Hydronic", "Mechanical"),        # ReturnHydronic
+    16: ("SanitaryWaste", "Plumbing"),    # Sanitary
+    17: ("Vent", "Plumbing"),             # Vent
+    19: ("DomesticHotWater", "Plumbing"), # DomesticHotWater
+    20: ("DomesticColdWater", "Plumbing"),# DomesticColdWater
+    22: ("Other", "Plumbing"),            # OtherPipe
+    23: ("Sprinkler", "FireProtection"),  # FireProtectWet
+    24: ("Sprinkler", "FireProtection"),  # FireProtectDry
+    25: ("Sprinkler", "FireProtection"),  # FireProtectPreaction
+    26: ("Sprinkler", "FireProtection"),  # FireProtectOther
+    28: ("Fitting", "Plumbing"),          # Fitting
+    29: ("Global", "Plumbing"),           # Global
+}
+for _k, _v in _PIPE_INT_FALLBACKS.items():
+    if _k not in _PIPE_TYPE_MAP:
+        _PIPE_TYPE_MAP[_k] = _v
 
 def _get_duct_type(sys):
     """Get system type string from MechanicalSystem, handles enum or int."""
@@ -357,9 +379,10 @@ def _get_pipe_type(sys):
         if "hot" in name or "hwr" in name or "hws" in name: return ("DomesticHotWater", "Plumbing")
         if "cold" in name or "cw" in name or "dcw" in name: return ("DomesticColdWater", "Plumbing")
         if "sanit" in name: return ("SanitaryWaste", "Plumbing")
-        if "storm" in name: return ("Storm", "Plumbing")
+        if "vent" in name: return ("Vent", "Plumbing")
         if "fire" in name or "sprink" in name: return ("Sprinkler", "FireProtection")
         if "hydron" in name or "chw" in name or "hw" in name: return ("Hydronic", "Mechanical")
+        if "storm" in name: return ("Other", "Plumbing")
     except Exception:
         pass
     return ("Other", "Plumbing")
@@ -565,7 +588,7 @@ log("PHASE 2: Finding orphaned elements...")
 ORPHAN_CATEGORIES = [
     BuiltInCategory.OST_DuctTerminal, BuiltInCategory.OST_DuctFitting,
     BuiltInCategory.OST_PipeFitting, BuiltInCategory.OST_PipeSegments,
-    BuiltInCategory.OST_MechanicalEquipment, BuiltInCategory.OST_PlumbingFixtures,
+    BuiltInCategory.OST_PlumbingFixtures,
     BuiltInCategory.OST_Sprinklers, BuiltInCategory.OST_ElectricalFixtures,
     BuiltInCategory.OST_ElectricalEquipment, BuiltInCategory.OST_LightingFixtures,
     BuiltInCategory.OST_DuctCurves, BuiltInCategory.OST_PipeCurves,
@@ -675,6 +698,74 @@ log("  Found {} orphaned elements".format(len(orphans_out)))
 orphans_payload = json.dumps({"building_type": BUILDING_TYPE, "orphans": orphans_out})
 
 # ============================================================================
+# PHASE 2.5: TOPOLOGICAL DEAD-END DETECTION (foolproof caps)
+# ============================================================================
+log("")
+log("PHASE 2.5: Topological dead-end detection (connector analysis)...")
+
+def _trace_branch(start_elem, max_hops=2):
+    """Walk connected elements from a dead end, return set of element IDs (ints)."""
+    branch = set()
+    branch.add(eid_int(start_elem.Id))
+    frontier = [start_elem]
+    for hop in range(max_hops):
+        next_frontier = []
+        for elem in frontier:
+            for eid_str in _get_connected_ids(elem):
+                eid = int(eid_str)
+                if eid not in branch:
+                    branch.add(eid)
+                    connected_elem = doc.GetElement(ElementId(eid))
+                    if connected_elem is not None:
+                        next_frontier.append(connected_elem)
+        frontier = next_frontier
+    return branch
+
+_PIPE_END_CATS = [
+    BuiltInCategory.OST_PipeFitting, BuiltInCategory.OST_PipeAccessory,
+]
+dead_end_count = 0
+dead_end_branch_elements = set()
+
+for bic in _PIPE_END_CATS:
+    try:
+        for elem in FilteredElementCollector(doc).OfCategory(bic).WhereElementIsNotElementType().ToElements():
+            try:
+                conn_mgr = None
+                try:
+                    conn_mgr = elem.MEPModel.ConnectorManager
+                except Exception:
+                    try:
+                        conn_mgr = elem.ConnectorManager
+                    except Exception:
+                        continue
+                if conn_mgr is None:
+                    continue
+                total_end = 0
+                connected_end = 0
+                for conn in conn_mgr.Connectors:
+                    try:
+                        if conn.ConnectorType == ConnectorType.End:
+                            total_end += 1
+                            if conn.IsConnected:
+                                connected_end += 1
+                    except Exception:
+                        pass
+                # Single-connector element = cap/plug/terminal
+                # Multi-connector with open ports = unused branch
+                if total_end == 1 or (total_end > 1 and connected_end > 0 and connected_end < total_end):
+                    dead_end_count += 1
+                    branch = _trace_branch(elem, max_hops=2)
+                    dead_end_branch_elements.update(branch)
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+log("  Found {} topological dead ends".format(dead_end_count))
+log("  {} elements in dead-end branches (caps + connected fittings/pipes)".format(len(dead_end_branch_elements)))
+
+# ============================================================================
 # PHASE 3: CALL CLAUDE API DIRECTLY (no MCP server)
 # ============================================================================
 log("")
@@ -684,37 +775,21 @@ ctx = ssl.create_default_context()
 ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
-AUDIT_PROMPT = """You are an expert MEP systems integrity auditor for a HOSPITAL BIM model.
-You receive system SUMMARIES with category counts and cap/plug indicators.
+AUDIT_PROMPT = """MEP auditor for a HOSPITAL. Systems have "categories" (element counts), optionally "caps_plugs" (dead-end count) and "dead_ends" (topological dead ends).
 
-## DEAD LEG DETECTION
-
-Each system has "categories" (element counts by type) and optionally "caps_plugs" (count of pipe caps/plugs/blind flanges).
-
-TWO ways to detect dead legs:
-1. CAPPED PIPE: System has "caps_plugs" > 0. A cap on a water pipe = sealed dead-end = stagnant water. ASHRAE 188 violation.
-2. NO FIXTURES: Domestic water system (HWS/HWR/CWS) with Pipes but 0 Plumbing Fixtures = water goes nowhere.
-
-Both are Critical-Patient Safety in a hospital. Legionella kills immunocompromised patients.
-
-## OTHER ISSUES
-- MISSING COMPONENT: Sanitary without vents (IPC 901.2). Sprinkler without heads (NFPA 13).
-- DEAD END: System with only 1-3 elements and no terminal equipment.
-- INCOMPLETE CHAIN: Pipes/fittings but no terminal elements.
+DEAD LEG: caps_plugs>0 OR dead_ends>0 OR domestic water with 0 fixtures = stagnant water = Legionella. ASHRAE 188.
+MISSING: Sanitary without vents (IPC 901.2). Sprinkler without heads (NFPA 13).
+DEAD END: 1-3 elements, no terminals.
 
 SEVERITY: Critical-Patient Safety, Critical-Life Safety, Critical-Code Violation, Major, Minor
-Skip systems named FUTURE or with fewer than 2 elements.
+Skip FUTURE systems or <2 elements. Max 12 findings. Descriptions MUST be under 15 words.
+Return ONLY raw JSON. NO markdown. NO code fences. NO backticks.
+{"findings":[{"system_id":"...","system_name":"...","finding_type":"dead_leg","severity":"Critical-Patient Safety","description":"15 words max","recommendation":"10 words max","code_reference":"ASHRAE 188"}]}"""
 
-Return at most 15 findings, prioritize Critical. Keep descriptions under 30 words.
-Return ONLY valid JSON, no markdown, no code fences:
-{"findings": [{"system_id":"...", "system_name":"...", "finding_type":"dead_leg|capped_dead_leg|incomplete_chain|dead_end|missing_component", "severity":"Critical-Patient Safety", "description":"short", "recommendation":"short", "code_reference":"ASHRAE 188"}]}"""
-
-CLASSIFY_PROMPT = """You are an MEP expert classifying orphaned Revit elements not in any system.
-For each: determine likely system, severity, action.
-Sprinkler heads = Critical-Life Safety. Plumbing in hospital = Critical-Patient Safety. HVAC in patient rooms = Major.
-
-Return at most 30 classifications, prioritize Critical severity. Keep reasoning under 20 words.
-Return ONLY valid JSON (no markdown, no code fences): {"classifications": [{"element_id":"...", "likely_system_type":"...", "confidence":0-100, "reasoning":"short", "severity":"...", "action":"short"}]}"""
+CLASSIFY_PROMPT = """Classify orphaned MEP elements (not in any system) for a HOSPITAL.
+Sprinkler=Critical-Life Safety. Plumbing=Critical-Patient Safety. HVAC=Major.
+Max 20. Reasoning under 10 words. Return ONLY raw JSON, NO markdown, NO backticks.
+{"classifications":[{"element_id":"...","likely_system_type":"...","confidence":80,"reasoning":"10 words","severity":"Major","action":"5 words"}]}"""
 
 def call_claude(system_prompt, user_msg, max_tokens=16384):
     """Call Claude API directly via urllib — no SDK, no MCP, no server."""
@@ -740,14 +815,10 @@ def call_claude(system_prompt, user_msg, max_tokens=16384):
 def parse_json(text):
     """Extract JSON from Claude response — handles markdown, truncation, messy output."""
     import re
-    # Strip markdown fences
     clean = text.strip()
-    if clean.startswith("```json"):
-        clean = clean[7:]
-    elif clean.startswith("```"):
-        clean = clean[3:]
-    if clean.endswith("```"):
-        clean = clean[:-3]
+    # Aggressively strip all markdown fence variations
+    clean = re.sub(r'^```\w*\s*\n?', '', clean)
+    clean = re.sub(r'\n?\s*```\s*$', '', clean)
     clean = clean.strip()
     # Try parsing as-is
     try:
@@ -761,15 +832,28 @@ def parse_json(text):
             return json.loads(m.group())
         except Exception:
             pass
-    # Truncated JSON repair: close open brackets
-    repaired = clean
-    if repaired.count("[") > repaired.count("]"):
-        # Find last complete item (ends with })
-        last_brace = repaired.rfind("}")
-        if last_brace > 0:
-            repaired = repaired[:last_brace + 1]
-            repaired += "]" * (repaired.count("[") - repaired.count("]"))
-            repaired += "}" * (repaired.count("{") - repaired.count("}"))
+        # Truncation repair on the matched region
+        s = m.group()
+        last_complete = s.rfind('},')
+        if last_complete < 0:
+            last_complete = s.rfind('}')
+        if last_complete > 0:
+            s = s[:last_complete + 1]
+            s += ']' * max(0, s.count('[') - s.count(']'))
+            s += '}' * max(0, s.count('{') - s.count('}'))
+            try:
+                return json.loads(s)
+            except Exception:
+                pass
+    # No closing brace at all (severely truncated) — find last complete item
+    if '{' in clean and '}' not in clean.split('[')[-1]:
+        last_complete = clean.rfind('},')
+        if last_complete < 0:
+            last_complete = clean.rfind('}')
+        if last_complete > 0:
+            repaired = clean[:last_complete + 1]
+            repaired += ']' * max(0, repaired.count('[') - repaired.count(']'))
+            repaired += '}' * max(0, repaired.count('{') - repaired.count('}'))
             try:
                 return json.loads(repaired)
             except Exception:
@@ -778,8 +862,8 @@ def parse_json(text):
 
 # Call audit_systems — pipes only (where dead legs live)
 audit_findings = []
-_PIPE_TYPES = {"DomesticHotWater", "DomesticColdWater", "SanitaryWaste", "Storm",
-               "Hydronic", "Sprinkler", "Other"}
+_PIPE_TYPES = {"DomesticHotWater", "DomesticColdWater", "SanitaryWaste",
+               "Hydronic", "Sprinkler", "Other", "Vent", "Fitting", "Global"}
 _PIPE_DISCIPLINES = {"Plumbing", "FireProtection"}
 pipe_summaries = []
 system_id_to_elements = {}
@@ -802,6 +886,11 @@ for s in systems_out:
         if any(kw in fam_lower or kw in type_lower for kw in _CAP_KEYWORDS):
             cap_count += 1
     total_caps += cap_count
+    # Count topological dead ends in this system
+    sys_dead_ends = 0
+    for e in s["elements"]:
+        if int(e["element_id"]) in dead_end_branch_elements:
+            sys_dead_ends += 1
     summary = {
         "system_id": s["system_id"], "system_name": s["system_name"],
         "system_type": s["system_type"], "element_count": len(elem_ids),
@@ -809,6 +898,8 @@ for s in systems_out:
     }
     if cap_count > 0:
         summary["caps_plugs"] = cap_count
+    if sys_dead_ends > 0:
+        summary["dead_ends"] = sys_dead_ends
     pipe_summaries.append(summary)
 # Debug: show unique families — especially pipe fittings (where caps live)
 all_families = set()
@@ -947,7 +1038,15 @@ for cls in orphan_classifications:
     if existing is None or SEVERITY_PRIORITY.get(severity, 0) > SEVERITY_PRIORITY.get(existing, 0):
         element_severity[eid_str] = severity
 
-log("  {} elements to color-code".format(len(element_severity)))
+# Topological dead ends — foolproof, works even if Claude API fails
+for eid in dead_end_branch_elements:
+    eid_str = str(eid)
+    existing = element_severity.get(eid_str)
+    if existing is None or SEVERITY_PRIORITY.get("Critical - Patient Safety", 0) > SEVERITY_PRIORITY.get(existing, 0):
+        element_severity[eid_str] = "Critical - Patient Safety"
+
+log("  {} elements to color-code ({} from topological dead ends)".format(
+    len(element_severity), len(dead_end_branch_elements)))
 
 # Find or create the QA view and apply overrides
 severity_counts = {}
@@ -1023,8 +1122,8 @@ try:
         except Exception as ex:
             log("  Set view to Shaded manually if colors don't show: {}".format(str(ex)))
         try:
-            qa_view.DetailLevel = ViewDetailLevel.Fine
-            log("  View detail level set to Fine")
+            qa_view.DetailLevel = ViewDetailLevel.Coarse
+            log("  View detail level set to Coarse")
         except Exception as ex:
             log("  Could not set detail level: {}".format(str(ex)))
 
@@ -1086,7 +1185,7 @@ try:
             BuiltInCategory.OST_DuctCurves, BuiltInCategory.OST_PipeCurves,
             BuiltInCategory.OST_DuctFitting, BuiltInCategory.OST_PipeFitting,
             BuiltInCategory.OST_DuctAccessory, BuiltInCategory.OST_PipeAccessory,
-            BuiltInCategory.OST_MechanicalEquipment, BuiltInCategory.OST_PlumbingFixtures,
+            BuiltInCategory.OST_PlumbingFixtures,
             BuiltInCategory.OST_Sprinklers, BuiltInCategory.OST_DuctTerminal,
             BuiltInCategory.OST_FlexDuctCurves, BuiltInCategory.OST_FlexPipeCurves,
         ]
