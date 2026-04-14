@@ -242,7 +242,7 @@ def _serialize_element(elem):
         "parameters": _get_element_params(elem),
     }
 
-# System type maps
+# System type maps — keyed by both enum AND int value for Revit 2026 compat
 _DUCT_TYPE_MAP = {}
 for _attr, _val in [
     ("SupplyAir", ("SupplyAir", "Mechanical")),
@@ -251,8 +251,10 @@ for _attr, _val in [
     ("OtherAir", ("Other", "Mechanical")),
 ]:
     try:
-        _DUCT_TYPE_MAP[getattr(DuctSystemType, _attr)] = _val
-    except AttributeError:
+        _enum = getattr(DuctSystemType, _attr)
+        _DUCT_TYPE_MAP[_enum] = _val
+        _DUCT_TYPE_MAP[int(_enum)] = _val
+    except (AttributeError, TypeError, ValueError):
         pass
 _PIPE_TYPE_MAP = {}
 for _attr, _val in [
@@ -270,9 +272,48 @@ for _attr, _val in [
     ("FireProtectOther", ("Sprinkler", "FireProtection")),
 ]:
     try:
-        _PIPE_TYPE_MAP[getattr(PipeSystemType, _attr)] = _val
-    except AttributeError:
+        _enum = getattr(PipeSystemType, _attr)
+        _PIPE_TYPE_MAP[_enum] = _val
+        _PIPE_TYPE_MAP[int(_enum)] = _val
+    except (AttributeError, TypeError, ValueError):
         pass
+
+def _get_duct_type(sys):
+    """Get system type string from MechanicalSystem, handles enum or int."""
+    try:
+        st = sys.SystemType
+        if st in _DUCT_TYPE_MAP:
+            return _DUCT_TYPE_MAP[st]
+        if int(st) in _DUCT_TYPE_MAP:
+            return _DUCT_TYPE_MAP[int(st)]
+        # Fallback: try the name
+        name = _safe_name(sys).lower()
+        if "supply" in name: return ("SupplyAir", "Mechanical")
+        if "return" in name: return ("ReturnAir", "Mechanical")
+        if "exhaust" in name: return ("Exhaust", "Mechanical")
+    except Exception:
+        pass
+    return ("Other", "Mechanical")
+
+def _get_pipe_type(sys):
+    """Get system type string from PipingSystem, handles enum or int."""
+    try:
+        st = sys.SystemType
+        if st in _PIPE_TYPE_MAP:
+            return _PIPE_TYPE_MAP[st]
+        if int(st) in _PIPE_TYPE_MAP:
+            return _PIPE_TYPE_MAP[int(st)]
+        # Fallback: try the name
+        name = _safe_name(sys).lower()
+        if "hot" in name or "hwr" in name or "hws" in name: return ("DomesticHotWater", "Plumbing")
+        if "cold" in name or "cw" in name or "dcw" in name: return ("DomesticColdWater", "Plumbing")
+        if "sanit" in name: return ("SanitaryWaste", "Plumbing")
+        if "storm" in name: return ("Storm", "Plumbing")
+        if "fire" in name or "sprink" in name: return ("Sprinkler", "FireProtection")
+        if "hydron" in name or "chw" in name or "hw" in name: return ("Hydronic", "Mechanical")
+    except Exception:
+        pass
+    return ("Other", "Plumbing")
 
 def _get_system_elements(system):
     elements = []
@@ -314,8 +355,7 @@ systems_out = []
 try:
     for sys in FilteredElementCollector(doc).OfClass(MechanicalSystem).ToElements():
         try:
-            dst = sys.SystemType
-            sys_type, discipline = _DUCT_TYPE_MAP.get(dst, ("Other", "Mechanical"))
+            sys_type, discipline = _get_duct_type(sys)
             systems_out.append({
                 "system_id": str(sys.Id.Value),
                 "system_name": _safe_name(sys),
@@ -328,8 +368,7 @@ try:
 
     for sys in FilteredElementCollector(doc).OfClass(PipingSystem).ToElements():
         try:
-            pst = sys.SystemType
-            sys_type, discipline = _PIPE_TYPE_MAP.get(pst, ("Other", "Plumbing"))
+            sys_type, discipline = _get_pipe_type(sys)
             systems_out.append({
                 "system_id": str(sys.Id.Value),
                 "system_name": _safe_name(sys),
