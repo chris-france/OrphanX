@@ -64,6 +64,14 @@ VIEW_NAME = "Orphan X - QA Audit"
 MAX_NEAREST = 3
 
 doc = DocumentManager.Instance.CurrentDBDocument
+
+def eid_int(element_id):
+    """Get integer value from ElementId — works on all Revit versions."""
+    try:
+        return element_id.Value
+    except AttributeError:
+        return element_id.IntegerValue
+
 log_lines = []
 
 def log(msg):
@@ -113,7 +121,7 @@ def _get_type_name(elem):
 def _get_level_name(elem):
     try:
         level_id = elem.LevelId
-        if level_id and level_id.IntegerValue > 0:
+        if level_id and eid_int(level_id) > 0:
             level = doc.GetElement(level_id)
             if level:
                 return level.Name
@@ -188,7 +196,7 @@ def _get_connected_ids(elem):
                 for ref_conn in connector.AllRefs:
                     owner = ref_conn.Owner
                     if owner and owner.Id != elem.Id:
-                        eid = str(owner.Id.IntegerValue)
+                        eid = str(owner.Id.Value)
                         if eid not in connected:
                             connected.append(eid)
     except Exception:
@@ -225,7 +233,7 @@ def _distance(p1, p2):
 
 def _serialize_element(elem):
     return {
-        "element_id": str(elem.Id.IntegerValue),
+        "element_id": str(elem.Id.Value),
         "category": _safe_name(elem.Category) if elem.Category else "Unknown",
         "family": _get_family_name(elem),
         "type": _get_type_name(elem),
@@ -281,14 +289,14 @@ def _get_system_elements(system):
         pass
     if elem_set:
         for elem in elem_set:
-            eid = elem.Id.IntegerValue
+            eid = elem.Id.Value
             if eid not in seen_ids:
                 seen_ids.add(eid)
                 elements.append(_serialize_element(elem))
     if not elements:
         try:
             for elem in system.Elements:
-                eid = elem.Id.IntegerValue
+                eid = elem.Id.Value
                 if eid not in seen_ids:
                     seen_ids.add(eid)
                     elements.append(_serialize_element(elem))
@@ -309,28 +317,28 @@ try:
             dst = sys.SystemType
             sys_type, discipline = _DUCT_TYPE_MAP.get(dst, ("Other", "Mechanical"))
             systems_out.append({
-                "system_id": str(sys.Id.IntegerValue),
+                "system_id": str(sys.Id.Value),
                 "system_name": _safe_name(sys),
                 "system_type": sys_type,
                 "discipline": discipline,
                 "elements": _get_system_elements(sys),
             })
         except Exception as ex:
-            errors.append("MechSys {}: {}".format(sys.Id.IntegerValue, str(ex)))
+            errors.append("MechSys {}: {}".format(sys.Id.Value, str(ex)))
 
     for sys in FilteredElementCollector(doc).OfClass(PipingSystem).ToElements():
         try:
             pst = sys.SystemType
             sys_type, discipline = _PIPE_TYPE_MAP.get(pst, ("Other", "Plumbing"))
             systems_out.append({
-                "system_id": str(sys.Id.IntegerValue),
+                "system_id": str(sys.Id.Value),
                 "system_name": _safe_name(sys),
                 "system_type": sys_type,
                 "discipline": discipline,
                 "elements": _get_system_elements(sys),
             })
         except Exception as ex:
-            errors.append("PipeSys {}: {}".format(sys.Id.IntegerValue, str(ex)))
+            errors.append("PipeSys {}: {}".format(sys.Id.Value, str(ex)))
 
     for sys in FilteredElementCollector(doc).OfClass(ElectricalSystem).ToElements():
         try:
@@ -342,14 +350,14 @@ try:
             else:
                 sys_type, discipline = "PowerCircuit", "Electrical"
             systems_out.append({
-                "system_id": str(sys.Id.IntegerValue),
+                "system_id": str(sys.Id.Value),
                 "system_name": _safe_name(sys),
                 "system_type": sys_type,
                 "discipline": discipline,
                 "elements": _get_system_elements(sys),
             })
         except Exception as ex:
-            errors.append("ElecSys {}: {}".format(sys.Id.IntegerValue, str(ex)))
+            errors.append("ElecSys {}: {}".format(sys.Id.Value, str(ex)))
 except Exception as ex:
     errors.append("System collection error: {}".format(str(ex)))
 
@@ -388,14 +396,14 @@ for sys in FilteredElementCollector(doc).OfClass(MechanicalSystem).ToElements():
         network = sys.DuctNetwork
         if network:
             for elem in network:
-                eid = elem.Id.IntegerValue
+                eid = elem.Id.Value
                 system_element_ids.add(eid)
                 if eid not in system_element_info:
                     system_element_info[eid] = {"system_name": sys_name, "xyz": _get_location_xyz(elem)}
     except Exception:
         try:
             for elem in sys.Elements:
-                eid = elem.Id.IntegerValue
+                eid = elem.Id.Value
                 system_element_ids.add(eid)
                 if eid not in system_element_info:
                     system_element_info[eid] = {"system_name": sys_name, "xyz": _get_location_xyz(elem)}
@@ -408,14 +416,14 @@ for sys in FilteredElementCollector(doc).OfClass(PipingSystem).ToElements():
         network = sys.PipingNetwork
         if network:
             for elem in network:
-                eid = elem.Id.IntegerValue
+                eid = elem.Id.Value
                 system_element_ids.add(eid)
                 if eid not in system_element_info:
                     system_element_info[eid] = {"system_name": sys_name, "xyz": _get_location_xyz(elem)}
     except Exception:
         try:
             for elem in sys.Elements:
-                eid = elem.Id.IntegerValue
+                eid = elem.Id.Value
                 system_element_ids.add(eid)
                 if eid not in system_element_info:
                     system_element_info[eid] = {"system_name": sys_name, "xyz": _get_location_xyz(elem)}
@@ -426,7 +434,7 @@ for sys in FilteredElementCollector(doc).OfClass(ElectricalSystem).ToElements():
     sys_name = _safe_name(sys)
     try:
         for elem in sys.Elements:
-            eid = elem.Id.IntegerValue
+            eid = elem.Id.Value
             system_element_ids.add(eid)
             if eid not in system_element_info:
                 system_element_info[eid] = {"system_name": sys_name, "xyz": _get_location_xyz(elem)}
@@ -453,7 +461,7 @@ for bic in ORPHAN_CATEGORIES:
     try:
         elems = FilteredElementCollector(doc).OfCategory(bic).WhereElementIsNotElementType().ToElements()
         for elem in elems:
-            eid = elem.Id.IntegerValue
+            eid = elem.Id.Value
             if eid in system_element_ids:
                 continue
             try:

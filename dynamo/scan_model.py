@@ -21,6 +21,14 @@ from Autodesk.Revit.DB import FilteredElementCollector, BuiltInCategory, BuiltIn
 from RevitServices.Persistence import DocumentManager
 
 doc = DocumentManager.Instance.CurrentDBDocument
+
+def eid_int(element_id):
+    """Get integer value from ElementId — works on all Revit versions."""
+    try:
+        return element_id.Value
+    except AttributeError:
+        return element_id.IntegerValue
+
 lines = []
 
 def log(msg):
@@ -107,7 +115,7 @@ if has_mech:
             log("  {}: {}".format(t, c))
         if mechs:
             sample = mechs[0]
-            log("  Sample: '{}' (ID: {})".format(sample.Name, sample.Id.IntegerValue))
+            log("  Sample: '{}' (ID: {})".format(sample.Name, sample.Id.Value))
     except Exception as ex:
         log("  Error: {}".format(str(ex)))
 
@@ -127,7 +135,7 @@ if has_pipe:
             log("  {}: {}".format(t, c))
         if pipes:
             sample = pipes[0]
-            log("  Sample: '{}' (ID: {})".format(sample.Name, sample.Id.IntegerValue))
+            log("  Sample: '{}' (ID: {})".format(sample.Name, sample.Id.Value))
     except Exception as ex:
         log("  Error: {}".format(str(ex)))
 
@@ -147,7 +155,7 @@ if has_elec:
             log("  {}: {}".format(t, c))
         if elecs:
             sample = elecs[0]
-            log("  Sample: '{}' (ID: {})".format(sample.Name, sample.Id.IntegerValue))
+            log("  Sample: '{}' (ID: {})".format(sample.Name, sample.Id.Value))
     except Exception as ex:
         log("  Error: {}".format(str(ex)))
 
@@ -214,7 +222,7 @@ if best_elems:
     log("Showing from '{}' ({} total):".format(best_cat, best_count))
     log("")
     for elem in list(best_elems)[:5]:
-        eid = elem.Id.IntegerValue
+        eid = elem.Id.Value
         cat = elem.Category.Name if elem.Category else "?"
 
         # Family name
@@ -242,7 +250,7 @@ if best_elems:
         lvl = "?"
         try:
             level_id = elem.LevelId
-            if level_id and level_id.IntegerValue > 0:
+            if level_id and eid_int(level_id) > 0:
                 lvl = doc.GetElement(level_id).Name
         except Exception:
             try:
@@ -270,7 +278,7 @@ if best_elems:
                     if conn.IsConnected:
                         for ref in conn.AllRefs:
                             if ref.Owner and ref.Owner.Id != elem.Id:
-                                connected_ids.append(str(ref.Owner.Id.IntegerValue))
+                                connected_ids.append(str(ref.Owner.Id.Value))
         except Exception:
             pass
 

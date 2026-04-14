@@ -41,6 +41,13 @@ from RevitServices.Persistence import DocumentManager
 # ---------------------------------------------------------------------------
 doc = DocumentManager.Instance.CurrentDBDocument
 
+def eid_int(element_id):
+    """Get integer value from ElementId — works on all Revit versions."""
+    try:
+        return element_id.Value
+    except AttributeError:
+        return element_id.IntegerValue
+
 # ---------------------------------------------------------------------------
 # Inputs
 # ---------------------------------------------------------------------------
@@ -126,7 +133,7 @@ def _get_type_name(elem):
 def _get_level_name(elem):
     try:
         level_id = elem.LevelId
-        if level_id and level_id.IntegerValue > 0:
+        if level_id and eid_int(level_id) > 0:
             level = doc.GetElement(level_id)
             if level:
                 return level.Name
@@ -200,7 +207,7 @@ try:
             network = sys.DuctNetwork
             if network:
                 for elem in network:
-                    eid = elem.Id.IntegerValue
+                    eid = elem.Id.Value
                     system_element_ids.add(eid)
                     if eid not in system_element_info:
                         system_element_info[eid] = {
@@ -210,7 +217,7 @@ try:
         except Exception:
             try:
                 for elem in sys.Elements:
-                    eid = elem.Id.IntegerValue
+                    eid = elem.Id.Value
                     system_element_ids.add(eid)
                     if eid not in system_element_info:
                         system_element_info[eid] = {
@@ -227,7 +234,7 @@ try:
             network = sys.PipingNetwork
             if network:
                 for elem in network:
-                    eid = elem.Id.IntegerValue
+                    eid = elem.Id.Value
                     system_element_ids.add(eid)
                     if eid not in system_element_info:
                         system_element_info[eid] = {
@@ -237,7 +244,7 @@ try:
         except Exception:
             try:
                 for elem in sys.Elements:
-                    eid = elem.Id.IntegerValue
+                    eid = elem.Id.Value
                     system_element_ids.add(eid)
                     if eid not in system_element_info:
                         system_element_info[eid] = {
@@ -252,7 +259,7 @@ try:
         sys_name = _safe_name(sys)
         try:
             for elem in sys.Elements:
-                eid = elem.Id.IntegerValue
+                eid = elem.Id.Value
                 system_element_ids.add(eid)
                 if eid not in system_element_info:
                     system_element_info[eid] = {
@@ -311,7 +318,7 @@ try:
                 .ToElements()
             )
             for elem in elems:
-                eid = elem.Id.IntegerValue
+                eid = elem.Id.Value
                 # Skip if this element is already in a system
                 if eid in system_element_ids:
                     continue
