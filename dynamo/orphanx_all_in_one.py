@@ -192,13 +192,16 @@ def _get_connected_ids(elem):
         if connectors is None:
             return connected
         for connector in connectors.Connectors:
-            if connector.IsConnected:
-                for ref_conn in connector.AllRefs:
-                    owner = ref_conn.Owner
-                    if owner and owner.Id != elem.Id:
-                        eid = str(owner.Id.Value)
-                        if eid not in connected:
-                            connected.append(eid)
+            try:
+                if connector.IsConnected:
+                    for ref_conn in connector.AllRefs:
+                        owner = ref_conn.Owner
+                        if owner and eid_int(owner.Id) != eid_int(elem.Id):
+                            eid = str(eid_int(owner.Id))
+                            if eid not in connected:
+                                connected.append(eid)
+            except Exception:
+                pass
     except Exception:
         pass
     return connected
@@ -233,7 +236,7 @@ def _distance(p1, p2):
 
 def _serialize_element(elem):
     return {
-        "element_id": str(elem.Id.Value),
+        "element_id": str(eid_int(elem.Id)),
         "category": _safe_name(elem.Category) if elem.Category else "Unknown",
         "family": _get_family_name(elem),
         "type": _get_type_name(elem),
@@ -330,17 +333,23 @@ def _get_system_elements(system):
         pass
     if elem_set:
         for elem in elem_set:
-            eid = elem.Id.Value
-            if eid not in seen_ids:
-                seen_ids.add(eid)
-                elements.append(_serialize_element(elem))
-    if not elements:
-        try:
-            for elem in system.Elements:
-                eid = elem.Id.Value
+            try:
+                eid = eid_int(elem.Id)
                 if eid not in seen_ids:
                     seen_ids.add(eid)
                     elements.append(_serialize_element(elem))
+            except Exception:
+                pass
+    if not elements:
+        try:
+            for elem in system.Elements:
+                try:
+                    eid = eid_int(elem.Id)
+                    if eid not in seen_ids:
+                        seen_ids.add(eid)
+                        elements.append(_serialize_element(elem))
+                except Exception:
+                    pass
         except Exception:
             pass
     return elements
@@ -357,27 +366,27 @@ try:
         try:
             sys_type, discipline = _get_duct_type(sys)
             systems_out.append({
-                "system_id": str(sys.Id.Value),
+                "system_id": str(eid_int(sys.Id)),
                 "system_name": _safe_name(sys),
                 "system_type": sys_type,
                 "discipline": discipline,
                 "elements": _get_system_elements(sys),
             })
         except Exception as ex:
-            errors.append("MechSys {}: {}".format(sys.Id.Value, str(ex)))
+            errors.append("MechSys: {}".format(str(ex)))
 
     for sys in FilteredElementCollector(doc).OfClass(PipingSystem).ToElements():
         try:
             sys_type, discipline = _get_pipe_type(sys)
             systems_out.append({
-                "system_id": str(sys.Id.Value),
+                "system_id": str(eid_int(sys.Id)),
                 "system_name": _safe_name(sys),
                 "system_type": sys_type,
                 "discipline": discipline,
                 "elements": _get_system_elements(sys),
             })
         except Exception as ex:
-            errors.append("PipeSys {}: {}".format(sys.Id.Value, str(ex)))
+            errors.append("PipeSys: {}".format(str(ex)))
 
     for sys in FilteredElementCollector(doc).OfClass(ElectricalSystem).ToElements():
         try:
@@ -389,14 +398,14 @@ try:
             else:
                 sys_type, discipline = "PowerCircuit", "Electrical"
             systems_out.append({
-                "system_id": str(sys.Id.Value),
+                "system_id": str(eid_int(sys.Id)),
                 "system_name": _safe_name(sys),
                 "system_type": sys_type,
                 "discipline": discipline,
                 "elements": _get_system_elements(sys),
             })
         except Exception as ex:
-            errors.append("ElecSys {}: {}".format(sys.Id.Value, str(ex)))
+            errors.append("ElecSys: {}".format(str(ex)))
 except Exception as ex:
     errors.append("System collection error: {}".format(str(ex)))
 
@@ -404,6 +413,8 @@ total_elements = sum(len(s["elements"]) for s in systems_out)
 log("  Found {} systems with {} elements".format(len(systems_out), total_elements))
 if errors:
     log("  {} extraction errors (non-fatal)".format(len(errors)))
+    for e in errors[:5]:
+        log("    ERROR: {}".format(e))
 
 systems_payload = json.dumps({"building_type": BUILDING_TYPE, "systems": systems_out})
 
@@ -435,14 +446,14 @@ for sys in FilteredElementCollector(doc).OfClass(MechanicalSystem).ToElements():
         network = sys.DuctNetwork
         if network:
             for elem in network:
-                eid = elem.Id.Value
+                eid = eid_int(elem.Id)
                 system_element_ids.add(eid)
                 if eid not in system_element_info:
                     system_element_info[eid] = {"system_name": sys_name, "xyz": _get_location_xyz(elem)}
     except Exception:
         try:
             for elem in sys.Elements:
-                eid = elem.Id.Value
+                eid = eid_int(elem.Id)
                 system_element_ids.add(eid)
                 if eid not in system_element_info:
                     system_element_info[eid] = {"system_name": sys_name, "xyz": _get_location_xyz(elem)}
@@ -455,14 +466,14 @@ for sys in FilteredElementCollector(doc).OfClass(PipingSystem).ToElements():
         network = sys.PipingNetwork
         if network:
             for elem in network:
-                eid = elem.Id.Value
+                eid = eid_int(elem.Id)
                 system_element_ids.add(eid)
                 if eid not in system_element_info:
                     system_element_info[eid] = {"system_name": sys_name, "xyz": _get_location_xyz(elem)}
     except Exception:
         try:
             for elem in sys.Elements:
-                eid = elem.Id.Value
+                eid = eid_int(elem.Id)
                 system_element_ids.add(eid)
                 if eid not in system_element_info:
                     system_element_info[eid] = {"system_name": sys_name, "xyz": _get_location_xyz(elem)}
@@ -473,7 +484,7 @@ for sys in FilteredElementCollector(doc).OfClass(ElectricalSystem).ToElements():
     sys_name = _safe_name(sys)
     try:
         for elem in sys.Elements:
-            eid = elem.Id.Value
+            eid = eid_int(elem.Id)
             system_element_ids.add(eid)
             if eid not in system_element_info:
                 system_element_info[eid] = {"system_name": sys_name, "xyz": _get_location_xyz(elem)}
@@ -500,7 +511,7 @@ for bic in ORPHAN_CATEGORIES:
     try:
         elems = FilteredElementCollector(doc).OfCategory(bic).WhereElementIsNotElementType().ToElements()
         for elem in elems:
-            eid = elem.Id.Value
+            eid = eid_int(elem.Id)
             if eid in system_element_ids:
                 continue
             try:
@@ -536,47 +547,92 @@ ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
 def call_mcp_tool(tool_name, arg_name, arg_value):
-    """Call an MCP tool via SSE + JSON-RPC and return the result."""
+    """Call an MCP tool via SSE + JSON-RPC. Keeps SSE stream open to receive response."""
+    sse_stream = None
     try:
-        # Step 1: Get session from SSE endpoint
-        # SSE is streaming — read line by line, not fixed byte count
-        sse_req = urllib.request.Request(MCP_URL + "/sse", method="GET")
-        sse_resp = urllib.request.urlopen(sse_req, timeout=30, context=ctx)
+        # Step 1: Open SSE stream (keep open — responses come back here)
+        sse_req = urllib.request.Request(MCP_URL + "/sse")
+        sse_stream = urllib.request.urlopen(sse_req, timeout=120, context=ctx)
 
         endpoint = None
-        for _ in range(10):
-            line = sse_resp.readline().decode("utf-8").strip()
+        for _ in range(20):
+            line = sse_stream.readline().decode("utf-8").strip()
             if line.startswith("data:") and "session_id" in line:
-                endpoint = line.split("data:")[1].strip()
+                endpoint = line.split("data:", 1)[1].strip()
                 break
-        sse_resp.close()
 
         if not endpoint:
             return None, "Could not get session from MCP server"
 
-        # Step 2: Call the tool via JSON-RPC POST
-        tool_call = {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "tools/call",
-            "params": {
-                "name": tool_name,
-                "arguments": {arg_name: arg_value}
-            }
-        }
+        full_url = MCP_URL + endpoint
 
-        post_req = urllib.request.Request(
-            MCP_URL + endpoint,
-            data=json.dumps(tool_call).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-            method="POST"
-        )
-        post_resp = urllib.request.urlopen(post_req, timeout=120, context=ctx)
-        result = post_resp.read().decode("utf-8")
-        return result, None
+        def _post(payload):
+            req = urllib.request.Request(
+                full_url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+            )
+            urllib.request.urlopen(req, timeout=10, context=ctx)
+
+        def _read_response():
+            for _ in range(500):
+                line = sse_stream.readline().decode("utf-8").strip()
+                if not line or line.startswith(":") or line.startswith("event:"):
+                    continue
+                if line.startswith("data:"):
+                    data_str = line.split("data:", 1)[1].strip()
+                    try:
+                        msg = json.loads(data_str)
+                        if "result" in msg or "error" in msg:
+                            return msg
+                    except Exception:
+                        continue
+            return None
+
+        # Step 2: Initialize MCP session
+        _post({
+            "jsonrpc": "2.0", "id": 0, "method": "initialize",
+            "params": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "OrphanX-Dynamo", "version": "1.0"}
+            }
+        })
+        _read_response()
+
+        # Step 3: Send initialized notification
+        _post({"jsonrpc": "2.0", "method": "notifications/initialized"})
+
+        # Step 4: Call the tool
+        _post({
+            "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+            "params": {"name": tool_name, "arguments": {arg_name: arg_value}}
+        })
+
+        # Step 5: Read result from SSE stream (not from POST response)
+        result = _read_response()
+
+        if result and "result" in result:
+            content = result["result"]
+            if isinstance(content, dict) and "content" in content:
+                for c in content["content"]:
+                    if c.get("type") == "text":
+                        return c["text"], None
+            return json.dumps(content), None
+
+        if result and "error" in result:
+            return None, "MCP error: {}".format(json.dumps(result["error"]))
+
+        return None, "No response from MCP server"
 
     except Exception as ex:
         return None, "MCP call failed: {}".format(str(ex))
+    finally:
+        if sse_stream:
+            try:
+                sse_stream.close()
+            except Exception:
+                pass
 
 
 # Call audit_systems
