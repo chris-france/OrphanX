@@ -1209,12 +1209,19 @@ try:
             lw = SEVERITY_LINE_WEIGHTS.get(sev_name, 4)
             severity_ogs_cache[sev_name] = _build_ogs(color, lw, False)
 
+        _SKIP_BIC = {BuiltInCategory.OST_MechanicalEquipment}
         for eid_str, severity in element_severity.items():
             try:
                 elem_id = ElementId(int(eid_str))
                 elem = doc.GetElement(elem_id)
                 if elem is None:
                     continue
+                # Skip mechanical equipment entirely
+                try:
+                    if elem.Category and elem.Category.BuiltInCategory in _SKIP_BIC:
+                        continue
+                except Exception:
+                    pass
                 ogs = severity_ogs_cache.get(severity, severity_ogs_cache.get("Orphan"))
                 qa_view.SetElementOverrides(elem_id, ogs)
                 overrides_applied += 1
