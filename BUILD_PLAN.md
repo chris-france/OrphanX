@@ -1,10 +1,10 @@
 # Orphan X — Build Plan
 
 **Team:**
-- **Chris France** — Mac, Claude Code, MCP server, all code generation
-- **Ignacio Benito Soto** (Kirby Group) — Windows, Revit + Dynamo
-- **Oskar Lindstrom** (Marioff) — Windows, Revit + Dynamo
-- **Petra O'Sullivan** (Red Engineering) — Windows, Revit + Dynamo
+- **Chris France** — Mac, Claude Code, AI/MCP backend (all server code)
+- **Ignacio Benito Soto** (Kirby Group) — Windows, Dynamo/Revit
+- **Oskar Lindstrom** (Marioff) — Windows, Dynamo/Revit
+- **Petra O'Sullivan** (Red Engineering) — Windows, Dynamo/Revit
 
 **Time:** ~7 productive hours (8:30 AM – 5:00 PM minus setup, lunch, demo prep)
 
@@ -14,30 +14,33 @@
 
 ## Machine Setup
 
-### MCP Server: Cloud VPS (internet accessible)
+### MCP Server: Cloud VPS (LIVE)
 
-DevCon WiFi blocks device-to-device traffic. The MCP server runs on a cloud VPS that everyone can reach over the internet.
+**STATUS: DEPLOYED AND RUNNING** on VPS at `/opt/orphanx/` on port 8620 behind Cloudflare tunnel.
 
-- **MCP Server URL:** `http://162.243.184.115:8620/sse`
-- **Health check:** `http://162.243.184.115:8620/health`
+- **MCP Server URL:** `https://orphanx.chrisfrance.ai/sse`
 - **OS:** Ubuntu 24.04 LTS, Python 3.12
 - **Chris manages** — SSH access, deploys code, holds the Anthropic API key
+- **Three tools live:** `audit_systems`, `classify_orphans`, `generate_report`
 
-Dynamo agentic nodes connect to `http://162.243.184.115:8620/sse`. Standard outbound HTTPS — works from any network.
+Dynamo agentic nodes connect to `https://orphanx.chrisfrance.ai/sse`. Standard outbound HTTPS — works from any network.
 
 ### Windows Machines (Ignacio, Oskar, Petra)
 
-**No installs needed.** The MCP server is remote. They only need:
-- Revit (already installed)
-- Dynamo with beta agentic nodes (already enabled for hackathon)
+**No installs needed except the Dynamo MCP beta extension.** The MCP server is remote. They need:
+- Revit 2024 or 2025
+- Dynamo 3.x with MCP agentic nodes (beta extension)
 
-That's it. The agentic node in Dynamo connects to `http://162.243.184.115:8620/sse` — just a URL. No Python, no Git, no dependencies on their machines.
+That's it. The agentic node in Dynamo connects to `https://orphanx.chrisfrance.ai/sse` — just a URL. No Python, no Git, no other dependencies on their machines.
 
 Oskar and Ignacio have admin if we need local installs as a fallback, but we shouldn't need them.
 
 ### Iteration Loop
-Chris edits code on Mac → deploys to VPS via SSH (`scp` or direct edit) → live instantly.
+Chris edits code on Mac → pushes to GitHub → deploys to VPS via SSH → live instantly.
 No push/pull on Windows. No restarts on their end. They just re-run the Dynamo graph.
+
+### Test Model
+Hospital Revit MEP test file is available (from mepwork.com). Use this as the primary demo model.
 
 ---
 
@@ -86,28 +89,24 @@ Open Dynamo with the agentic nodes enabled. Answer these questions and report ba
 
 **Document everything.** Take screenshots. Chris needs this info to build the right server.
 
-### Chris (Mac) — Setup + Mock MCP Server
+### Chris (Mac) — MCP Server (COMPLETE)
 
-While the team explores, Chris sets up the development environment and builds a mock version of the MCP server that works with synthetic data:
+**Server is built and deployed to VPS.** Three tools live: `audit_systems`, `classify_orphans`, `generate_report`.
 
-```bash
-# Project setup
-cd /tmp/OrphanX
-python3.12 -m venv venv && source venv/activate
-pip install fastmcp anthropic fastapi uvicorn requests
-```
-
-Build the MCP server skeleton with hardcoded mock data so the AI analysis logic can be tested independently of Dynamo. When the Windows team reports back with real data shapes, swap mock data for real.
+While the team explores Dynamo agentic nodes, Chris:
+- Monitors server health at `https://orphanx.chrisfrance.ai/health`
+- Adjusts tool schemas based on what the Dynamo team discovers about real data shapes
+- Tunes Claude system prompts for accuracy based on MEP team feedback
 
 ---
 
 ## Phase 1: Parallel Build (9:00 – 11:30)
 
-### Chris (Mac) — Build the MCP Server
+### Chris (Mac) — MCP Server (DONE — LIVE ON VPS)
 
-**Priority order:**
+**Server is deployed and running.** All three tools are live. Priority now shifts to tuning prompts based on real Revit data from the Dynamo team.
 
-#### 1. `audit_systems` tool (core — spend the most time here)
+#### 1. `audit_systems` tool (DEPLOYED)
 - Receives: list of MEP systems with their elements, types, connectivity
 - Claude system prompt with full MEP engineering knowledge:
   - System completeness chains by type (see README Section 3)
@@ -119,12 +118,12 @@ Build the MCP server skeleton with hardcoded mock data so the AI analysis logic 
 - **Patient Safety findings first** — dead legs in domestic water get highest severity
 - Test with mock data: verify finding quality, false positive rate, recommendation specificity
 
-#### 2. `classify_orphans` tool
+#### 2. `classify_orphans` tool (DEPLOYED)
 - Receives: elements not in any system + their nearest neighbors
 - Claude determines: likely intended system, confidence score, recommended action
 - Hospital context: orphaned HVAC elements in patient areas = infection control concern
 
-#### 3. `generate_report` tool
+#### 3. `generate_report` tool (DEPLOYED)
 - Receives: all findings from audit_systems + classify_orphans
 - Returns: formatted plain-English report organized by:
   1. Patient Safety findings
@@ -133,16 +132,16 @@ Build the MCP server skeleton with hardcoded mock data so the AI analysis logic 
   4. Minor findings
 - Each finding: what's wrong, why it matters, what to do, code reference if applicable
 
-#### 4. Server configuration
-- FastMCP with SSE transport on port 8620
-- Also support stdio transport (if agentic nodes require it)
-- CORS enabled for local network access
-- Health check endpoint for testing connectivity
+#### 4. Server configuration (DEPLOYED)
+- FastMCP with SSE transport on port 8620 behind Cloudflare tunnel
+- HTTPS via `https://orphanx.chrisfrance.ai/sse`
+- Health check endpoint: `https://orphanx.chrisfrance.ai/health`
 
 ### Petra — Prepare the Demo Model
 
-- Open Snowdon Towers MEP model (or rme_advanced_sample_project.rvt)
-- Frame it as a "generic hospital" for the demo narrative
+- **Hospital Revit MEP test file is available** (from mepwork.com) — use as primary demo model
+- Alternatively use Snowdon Towers MEP model or rme_advanced_sample_project.rvt
+- Frame as a hospital for the demo narrative
 - **Seed the test cases** (all of these — we need findings in every discipline):
 
 | # | What to Seed | Discipline | Expected Severity |
@@ -162,6 +161,8 @@ Build the MCP server skeleton with hardcoded mock data so the AI analysis logic 
 
 ### Ignacio — Dynamo Graph Foundation
 
+**Requires:** Dynamo 3.x with MCP agentic nodes (beta extension), Revit 2024 or 2025.
+
 Based on the discovery results from the first hour:
 
 - Build the Dynamo graph skeleton:
@@ -170,8 +171,9 @@ Based on the discovery results from the first hour:
   - Agentic Node #2: Orphan X MCP → send system data, receive findings
   - Standard nodes: parse findings JSON
   - View override nodes: map severity to color, apply to elements
-- Test Agentic Node #2 connectivity to Chris's Mac (`http://<chris-mac-ip>:8620/sse`)
-- If SSE doesn't work: try stdio transport, or HTTP POST fallback via Python Script node
+- Test Agentic Node #2 connectivity to `https://orphanx.chrisfrance.ai/sse`
+- If SSE doesn't work: HTTP POST fallback via Python Script node
+- **Dynamo Python scripts being created:** `extract_mep_systems.py`, `find_orphans.py`, `apply_overrides.py`
 
 ### Oskar — Dynamo Graph: View Overrides
 
@@ -195,8 +197,8 @@ Build the downstream Dynamo nodes that apply visual results:
 ## Phase 2: Integration (11:30 – 1:00, through lunch)
 
 ### Network Setup
-- MCP server runs on **cloud VPS** (`162.243.184.115:8620`)
-- Dynamo agentic node connects to `http://162.243.184.115:8620/sse`
+- MCP server runs on **cloud VPS** at `/opt/orphanx/` on port 8620 behind Cloudflare tunnel
+- Dynamo agentic node connects to `https://orphanx.chrisfrance.ai/sse`
 - Standard outbound HTTPS — works from any network, no WiFi LAN issues
 - Chris deploys code changes via SSH — live instantly, no action needed on Windows machines
 
@@ -255,7 +257,7 @@ If the live demo breaks (it's a hackathon — things break):
 4. "We had it running 30 minutes ago — here's the proof. Let us show you the architecture."
 
 ### Pre-Demo Checklist
-- [ ] MCP server running on port 8620
+- [ ] MCP server live at `https://orphanx.chrisfrance.ai/sse`
 - [ ] Dynamo graph opens without errors
 - [ ] Run button executes full pipeline
 - [ ] Color-coded view shows all 5 colors
@@ -299,7 +301,7 @@ OrphanX/
 │   └── .env.example               # ANTHROPIC_API_KEY=
 ├── dynamo/                        # Dynamo graph files
 │   ├── OrphanX.dyn                # Main graph
-│   └── python_scripts/            # Python Script node code (fallback)
+│   └── python_scripts/            # Dynamo Python scripts (being created)
 │       ├── extract_mep_systems.py # Query Revit API for system data
 │       ├── find_orphans.py        # Find elements not in any system
 │       └── apply_overrides.py     # Color-code elements by severity
@@ -317,15 +319,18 @@ OrphanX/
 ## Network Diagram (Hackathon Setup)
 
 ```
-   Chris's Mac                      Cloud VPS
-┌──────────────┐    SSH deploy    ┌──────────────────────────┐
-│              │─────────────────►│  MCP Server (port 8620)  │
-│  Claude Code │                  │  ├── audit_systems       │
-│  (writes all │                  │  ├── classify_orphans    │
-│   the code)  │                  │  └── generate_report     │
-└──────────────┘                  │                          │
-                                  │  Anthropic API key here  │
-                                  └────────────┬─────────────┘
+   Chris's Mac                      Cloud VPS (/opt/orphanx/)
+┌──────────────┐   SSH + GitHub   ┌──────────────────────────────────┐
+│              │─────────────────►│  MCP Server (port 8620)          │
+│  Claude Code │                  │  behind Cloudflare tunnel        │
+│  AI/MCP      │                  │  ├── audit_systems               │
+│  backend     │                  │  ├── classify_orphans            │
+└──────────────┘                  │  └── generate_report             │
+                                  │                                  │
+                                  │  Anthropic API key here          │
+                                  └────────────┬─────────────────────┘
+                                               │
+                    https://orphanx.chrisfrance.ai/sse
                                                │
                               ┌────────────────┼────────────────┐
                               │                │                │
@@ -334,12 +339,14 @@ OrphanX/
                     │  Ignacio     │ │  Oskar       │ │  Petra       │
                     │  Dynamo+Revit│ │  Dynamo+Revit│ │  Dynamo+Revit│
                     │  (demo mach) │ │  (backup)    │ │  (model prep)│
+                    │  Revit 2024+ │ │  Revit 2024+ │ │  Revit 2024+ │
+                    │  Dynamo 3.x  │ │  Dynamo 3.x  │ │  Dynamo 3.x  │
+                    │  MCP beta ext│ │  MCP beta ext│ │  MCP beta ext│
                     └──────────────┘ └──────────────┘ └──────────────┘
-                    Agentic node → http://162.243.184.115:8620/sse
 ```
 
-**Code flow:** Chris edits on Mac → SSH deploys to VPS → live instantly. Windows team just re-runs the Dynamo graph.
+**Code flow:** Chris edits on Mac → pushes to GitHub → deploys to VPS → live instantly. Windows team just re-runs the Dynamo graph.
 
 ---
 
-**When this plan is approved, Chris starts building `server/` immediately. Windows team starts discovery + model prep simultaneously.**
+**Server is LIVE. Windows team: install Dynamo MCP beta extension, connect to `https://orphanx.chrisfrance.ai/sse`, and start discovery + model prep.**
