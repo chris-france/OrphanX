@@ -943,6 +943,16 @@ try:
                 log("  ERROR: Could not create view: {}".format(str(ex)))
 
     if qa_view:
+        # Disable section box and crop so we see the ENTIRE model
+        try:
+            qa_view.IsSectionBoxActive = False
+        except Exception:
+            pass
+        try:
+            qa_view.CropBoxActive = False
+        except Exception:
+            pass
+
         # Set view to Shaded so color overrides are visible
         try:
             if DisplayStyle is not None:
