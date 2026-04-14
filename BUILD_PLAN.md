@@ -1,352 +1,301 @@
-# Orphan X — Build Plan
+# Orphan X — Architecture & Build Plan
 
-**Team:**
-- **Chris France** — Mac, Claude Code, AI/MCP backend (all server code)
-- **Ignacio Benito Soto** (Kirby Group) — Windows, Dynamo/Revit
-- **Oskar Lindstrom** (Marioff) — Windows, Dynamo/Revit
-- **Petra O'Sullivan** (Red Engineering) — Windows, Dynamo/Revit
-
-**Time:** ~7 productive hours (8:30 AM – 5:00 PM minus setup, lunch, demo prep)
-
-**Core principle:** Build in parallel, connect in the middle, polish at the end.
+**Team:** Chris France (AI/MCP backend), Ignacio Benito Soto, Oskar Lindstrom, Petra O'Sullivan
+**GitHub:** https://github.com/ibenitosoto/OrphanX
+**Event:** Autodesk DevCon 2026 Dynamo Day Hackathon — April 14, Amsterdam
 
 ---
 
-## Machine Setup
-
-### MCP Server: Cloud VPS (LIVE)
-
-**STATUS: DEPLOYED AND RUNNING** on VPS at `/opt/orphanx/` on port 8620 behind Cloudflare tunnel.
-
-- **MCP Server URL:** `https://orphanx.chrisfrance.ai/sse`
-- **OS:** Ubuntu 24.04 LTS, Python 3.12
-- **Chris manages** — SSH access, deploys code, holds the Anthropic API key
-- **Three tools live:** `audit_systems`, `classify_orphans`, `generate_report`
-
-Dynamo agentic nodes connect to `https://orphanx.chrisfrance.ai/sse`. Standard outbound HTTPS — works from any network.
-
-### Windows Machines (Ignacio, Oskar, Petra)
-
-**No installs needed except the Dynamo MCP beta extension.** The MCP server is remote. They need:
-- Revit 2024 or 2025
-- Dynamo 3.x with MCP agentic nodes (beta extension)
-
-That's it. The agentic node in Dynamo connects to `https://orphanx.chrisfrance.ai/sse` — just a URL. No Python, no Git, no other dependencies on their machines.
-
-Oskar and Ignacio have admin if we need local installs as a fallback, but we shouldn't need them.
-
-### Iteration Loop
-Chris edits code on Mac → pushes to GitHub → deploys to VPS via SSH → live instantly.
-No push/pull on Windows. No restarts on their end. They just re-run the Dynamo graph.
-
-### Test Model
-Hospital Revit MEP test file is available (from mepwork.com). Use this as the primary demo model.
-
----
-
-## Critical First Hour: Discovery (8:00 – 9:00)
-
-Before writing a single line of production code, we need answers to questions that determine the entire architecture.
-
-### Windows Team (all 3) — Explore the Alpha Tooling
-
-Open Dynamo with the agentic nodes enabled. Answer these questions and report back to Chris:
-
-**Agentic Node Discovery:**
-1. Open a Revit model with MEP systems (Snowdon Towers or any MEP model)
-2. Drop an `AgentProcess.GetAllAvailableTools` node — what tools does the Revit MCP expose?
-3. Write down EVERY tool name and its parameters — we need the exact schema
-4. Specifically look for:
-   - Can it list all MEP systems? (MechanicalSystem, PipingSystem, ElectricalSystem)
-   - Can it get elements within a system?
-   - Can it get element connectivity (what connects to what)?
-   - Can it get elements NOT in any system (orphans)?
-   - Can it get element parameters (size, flow, level)?
-   - Can it apply view overrides / color changes?
-5. Try a `Send Request` node — what format does it expect? What does it return?
-6. Can the agentic node connect to an external MCP server via SSE? (i.e., `http://<ip>:8620/sse`)
-7. Save a sample .dyn file with one working agentic node and send it to Chris — he needs the JSON schema
-
-**If the Revit MCP can't get system data:**
-- Use a Python Script node in Dynamo to query Revit API directly:
-  ```python
-  # In Dynamo Python Script node
-  import clr
-  clr.AddReference('RevitAPI')
-  from Autodesk.Revit.DB import *
-  from Autodesk.Revit.DB.Mechanical import *
-  from Autodesk.Revit.DB.Plumbing import *
-  from Autodesk.Revit.DB.Electrical import *
-  
-  doc = __revit__.ActiveUIDocument.Document
-  
-  # Get all MEP systems
-  mech_systems = FilteredElementCollector(doc).OfClass(MechanicalSystem).ToElements()
-  pipe_systems = FilteredElementCollector(doc).OfClass(PipingSystem).ToElements()
-  elec_systems = FilteredElementCollector(doc).OfClass(ElectricalSystem).ToElements()
-  ```
-- This is our **fallback** — extract data via Python Script node, pass to agentic node for AI analysis
-
-**Document everything.** Take screenshots. Chris needs this info to build the right server.
-
-### Chris (Mac) — MCP Server (COMPLETE)
-
-**Server is built and deployed to VPS.** Three tools live: `audit_systems`, `classify_orphans`, `generate_report`.
-
-While the team explores Dynamo agentic nodes, Chris:
-- Monitors server health at `https://orphanx.chrisfrance.ai/health`
-- Adjusts tool schemas based on what the Dynamo team discovers about real data shapes
-- Tunes Claude system prompts for accuracy based on MEP team feedback
-
----
-
-## Phase 1: Parallel Build (9:00 – 11:30)
-
-### Chris (Mac) — MCP Server (DONE — LIVE ON VPS)
-
-**Server is deployed and running.** All three tools are live. Priority now shifts to tuning prompts based on real Revit data from the Dynamo team.
-
-#### 1. `audit_systems` tool (DEPLOYED)
-- Receives: list of MEP systems with their elements, types, connectivity
-- Claude system prompt with full MEP engineering knowledge:
-  - System completeness chains by type (see README Section 3)
-  - ASHRAE 188 dead leg rules (>6x pipe diameter = stagnation risk)
-  - IPC code awareness (venting requirements)
-  - Life safety rules (sprinkler coverage)
-  - Hospital-specific severity escalation
-- Returns: findings with severity, description, affected elements, recommendation
-- **Patient Safety findings first** — dead legs in domestic water get highest severity
-- Test with mock data: verify finding quality, false positive rate, recommendation specificity
-
-#### 2. `classify_orphans` tool (DEPLOYED)
-- Receives: elements not in any system + their nearest neighbors
-- Claude determines: likely intended system, confidence score, recommended action
-- Hospital context: orphaned HVAC elements in patient areas = infection control concern
-
-#### 3. `generate_report` tool (DEPLOYED)
-- Receives: all findings from audit_systems + classify_orphans
-- Returns: formatted plain-English report organized by:
-  1. Patient Safety findings
-  2. Life Safety / Code findings
-  3. Major findings
-  4. Minor findings
-- Each finding: what's wrong, why it matters, what to do, code reference if applicable
-
-#### 4. Server configuration (DEPLOYED)
-- FastMCP with SSE transport on port 8620 behind Cloudflare tunnel
-- HTTPS via `https://orphanx.chrisfrance.ai/sse`
-- Health check endpoint: `https://orphanx.chrisfrance.ai/health`
-
-### Petra — Prepare the Demo Model
-
-- **Hospital Revit MEP test file is available** (from mepwork.com) — use as primary demo model
-- Alternatively use Snowdon Towers MEP model or rme_advanced_sample_project.rvt
-- Frame as a hospital for the demo narrative
-- **Seed the test cases** (all of these — we need findings in every discipline):
-
-| # | What to Seed | Discipline | Expected Severity |
-|---|---|---|---|
-| 1 | 3-4 dead legs in domestic hot water (Level 3) | Plumbing | Critical - Patient Safety |
-| 2 | 2 orphaned cold water branches (Level 2) | Plumbing | Critical - Patient Safety |
-| 3 | 3 orphaned supply diffusers (Level 2) | Mechanical | Major |
-| 4 | Disconnect a branch duct from main (Level 1) | Mechanical | Major |
-| 5 | Remove vent from plumbing fixture group (Level 3) | Plumbing | Critical - Code |
-| 6 | Delete branch line from 4 sprinkler heads (Level 2) | Fire Protection | Critical - Life Safety |
-| 7 | Cross-connect: return grille in supply air system | Mechanical | Major |
-| 8 | Empty circuit on electrical panel | Electrical | Major |
-
-- Create a duplicate 3D view named **"Orphan X Audit"** — this is where color overrides go
-- Create shared parameters if needed: `OX_Status`, `OX_Severity`, `OX_Note`
-- **Document** the element IDs of seeded issues so we can verify the auditor finds them
-
-### Ignacio — Dynamo Graph Foundation
-
-**Requires:** Dynamo 3.x with MCP agentic nodes (beta extension), Revit 2024 or 2025.
-
-Based on the discovery results from the first hour:
-
-- Build the Dynamo graph skeleton:
-  - Agentic Node #1: Revit MCP → query all MEP systems and elements
-  - OR Python Script node fallback: query Revit API → serialize to JSON
-  - Agentic Node #2: Orphan X MCP → send system data, receive findings
-  - Standard nodes: parse findings JSON
-  - View override nodes: map severity to color, apply to elements
-- Test Agentic Node #2 connectivity to `https://orphanx.chrisfrance.ai/sse`
-- If SSE doesn't work: HTTP POST fallback via Python Script node
-- **Dynamo Python scripts being created:** `extract_mep_systems.py`, `find_orphans.py`, `apply_overrides.py`
-
-### Oskar — Dynamo Graph: View Overrides
-
-Build the downstream Dynamo nodes that apply visual results:
-
-- **Input:** List of element IDs + severity levels from the MCP response
-- **Color mapping:**
-  - Green (0, 180, 0) = Healthy
-  - Yellow (255, 200, 0) = Warning / Minor
-  - Orange (255, 140, 0) = Major
-  - Red (220, 0, 0) = Critical (patient safety + code)
-  - Gray (180, 180, 180) = Orphaned
-- **Nodes needed:**
-  - `OverrideGraphicSettings.ByProperties` — set projection surface color
-  - `Element.SetOverrides` — apply to specific elements in the "Orphan X Audit" view
-  - Filter nodes to separate findings by severity
-- Test with hardcoded element IDs first, then connect to live data from Agentic Node #2
-
----
-
-## Phase 2: Integration (11:30 – 1:00, through lunch)
-
-### Network Setup
-- MCP server runs on **cloud VPS** at `/opt/orphanx/` on port 8620 behind Cloudflare tunnel
-- Dynamo agentic node connects to `https://orphanx.chrisfrance.ai/sse`
-- Standard outbound HTTPS — works from any network, no WiFi LAN issues
-- Chris deploys code changes via SSH — live instantly, no action needed on Windows machines
-
-### Connect the Pipeline
-1. Agentic Node #1 extracts real system data from seeded model
-2. Verify data shape matches what Chris's MCP server expects — adjust server if needed
-3. Agentic Node #2 sends data to Orphan X MCP server
-4. Verify AI findings are correct — does it find all 8 seeded issues?
-5. View overrides apply to correct elements with correct colors
-6. End-to-end: one click in Dynamo → color-coded model + report
-
-### Debug Priorities
-1. **Data shape mismatch** (most likely issue) — the real Revit data won't match mock format perfectly. Chris adjusts the MCP server parser.
-2. **Network connectivity** — firewall, wrong IP, transport mismatch. Try all fallbacks.
-3. **False positives** — AI flags things that aren't problems. Tune the system prompt with MEP team input.
-4. **False negatives** — AI misses seeded issues. Check if the data extraction captured enough info.
-5. **View override errors** — wrong elements colored, or overrides not applying. Check element ID mapping.
-
----
-
-## Phase 3: Polish + Stretch Goals (1:00 – 3:00)
-
-Priority order — do as many as time allows:
-
-1. **Tune AI findings quality** — iterate on system prompt with MEP team. They review every finding: is it accurate? Is the severity right? Is the recommendation actionable?
-2. **Report formatting** — make the `generate_report` output clean, professional, printable
-3. **Cross-connection detection** — verify the AI catches the return grille in supply air system
-4. **Summary statistics** — total systems, health %, findings by discipline, findings by severity
-5. **Export findings to CSV** — one-click export for coordination meetings
-6. **Test with a second model** — proves it's not hardcoded for one project
-7. **Dynamo Player button** — package the graph so it's one-click from Revit (no graph visible)
-
----
-
-## Phase 4: Demo Prep (3:00 – 4:30)
-
-### Demo Script (5 minutes)
-
-| Time | What | Who |
-|---|---|---|
-| 0:00 – 0:45 | **The Story** — Legionella, dead legs, patients at risk. Why existing tools can't find this. | Petra |
-| 0:45 – 1:15 | **The Model** — Show the hospital MEP model. "This passed review." | Petra |
-| 1:15 – 1:45 | **Run Orphan X** — Open Dynamo, hit Run, show agentic nodes working | Ignacio |
-| 1:45 – 2:45 | **The Kill Shot** — Zoom to red dead legs. "This is where patients get sick." Then show ALL disciplines: sprinklers, HVAC orphans, electrical. | Oskar |
-| 2:45 – 3:30 | **The Report** — Show findings by severity. Plain English. ASHRAE 188 reference. | Oskar |
-| 3:30 – 4:15 | **Architecture** — Quick slide: 2 agentic nodes + MCP server. How it works. | Chris |
-| 4:15 – 5:00 | **Impact** — "2 days → 2 minutes. Works on any model. Saves patients." | Petra |
-
-### Fallback Plan
-
-If the live demo breaks (it's a hackathon — things break):
-
-1. **Pre-screenshot** the color-coded model view before demo time
-2. **Pre-generate** the report output as a text file
-3. **Architecture walkthrough** — show the code, explain the MCP pattern, show the system prompt
-4. "We had it running 30 minutes ago — here's the proof. Let us show you the architecture."
-
-### Pre-Demo Checklist
-- [ ] MCP server live at `https://orphanx.chrisfrance.ai/sse`
-- [ ] Dynamo graph opens without errors
-- [ ] Run button executes full pipeline
-- [ ] Color-coded view shows all 5 colors
-- [ ] Report generates with all findings
-- [ ] Revit zoomed to Level 3 patient wing (red dead legs visible)
-- [ ] Backup screenshots saved
-- [ ] Backup report text saved
-- [ ] All team members know their demo role
-
----
-
-## Risk Register
-
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| Agentic nodes can't connect to external MCP | Medium | High | Fallback: Python Script node makes HTTP POST to localhost:8620 |
-| Revit MCP doesn't expose system/connectivity data | Medium | High | Fallback: Python Script node queries Revit API directly |
-| ~~Hackathon WiFi blocks inter-device traffic~~ | ~~High~~ | ~~Medium~~ | **ELIMINATED** — MCP server runs on cloud VPS, accessible from any network |
-| AI produces false positives | Medium | Medium | MEP team reviews and tunes system prompt during Phase 3 |
-| Snowdon Towers lacks enough MEP data | Low | Medium | Use rme_advanced_sample_project.rvt instead, or seed more test cases |
-| .dyn graph generated on Mac doesn't open in Dynamo | Low | Medium | Team builds graph manually on Windows using Chris's node specs |
-| Claude API rate limit / downtime | Low | Critical | Pre-cache responses for demo, have offline mode with hardcoded results |
-
----
-
-## File Structure
+## Architecture Overview
 
 ```
-OrphanX/
-├── README.md                      # Architecture brief (this repo)
-├── BUILD_PLAN.md                  # This file
-├── server/                        # MCP server (Chris builds on Mac)
-│   ├── main.py                    # FastMCP server entry point
-│   ├── tools/
-│   │   ├── audit_systems.py       # System completeness analysis
-│   │   ├── classify_orphans.py    # Orphan element classification
-│   │   └── generate_report.py     # QA/QC report generator
-│   ├── prompts/
-│   │   └── system_prompt.py       # MEP engineering knowledge for Claude
-│   ├── requirements.txt
-│   └── .env.example               # ANTHROPIC_API_KEY=
-├── dynamo/                        # Dynamo graph files
-│   ├── OrphanX.dyn                # Main graph
-│   └── python_scripts/            # Dynamo Python scripts (being created)
-│       ├── extract_mep_systems.py # Query Revit API for system data
-│       ├── find_orphans.py        # Find elements not in any system
-│       └── apply_overrides.py     # Color-code elements by severity
-├── test_data/                     # Mock data for testing without Revit
-│   ├── mock_systems.json          # Sample system extraction
-│   ├── mock_orphans.json          # Sample orphaned elements
-│   └── seeded_issues.md           # What we planted + expected findings
-└── demo/                          # Demo materials
-    ├── screenshots/               # Backup screenshots of results
-    └── sample_report.txt          # Pre-generated report for fallback
+┌─────────────────────────────────────────────────────┐
+│                  REVIT + DYNAMO                      │
+│                                                      │
+│  ┌──────────────────────────────────────────────┐   │
+│  │          Python Script Node (CPython3)        │   │
+│  │                                               │   │
+│  │  Phase 1: Extract MEP systems from Revit API  │   │
+│  │  Phase 2: Find orphaned elements              │   │
+│  │  Phase 3: Call MCP server (SSE + JSON-RPC)    │   │
+│  │  Phase 4: Color-code elements by severity     │   │
+│  └──────────────────┬───────────────────────────┘   │
+│                     │                                │
+│                     │ HTTPS (SSE + JSON-RPC)         │
+└─────────────────────┼───────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────┐
+│           ORPHAN X MCP SERVER (Cloud VPS)            │
+│           https://orphanx.chrisfrance.ai             │
+│                                                      │
+│  ┌───────────────┐  ┌────────────────────────────┐  │
+│  │   FastMCP     │  │   LLM (Claude Sonnet 4.6)  │  │
+│  │   SSE on 8620 │  │   via Anthropic API         │  │
+│  │               │  │                             │  │
+│  │ 3 MCP Tools:  │──│ System prompts with full    │  │
+│  │ audit_systems │  │ MEP engineering knowledge:  │  │
+│  │ classify_     │  │ • ASHRAE 188 (dead legs)    │  │
+│  │   orphans     │  │ • NFPA 13 (sprinklers)      │  │
+│  │ generate_     │  │ • IPC 901.2 (venting)       │  │
+│  │   report      │  │ • NEC (electrical)          │  │
+│  └───────────────┘  └────────────────────────────┘  │
+│                                                      │
+│  Ubuntu 24.04 | Python 3.12 | Cloudflare Tunnel     │
+└─────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Network Diagram (Hackathon Setup)
+## MCP Server — How It Works
 
-```
-   Chris's Mac                      Cloud VPS (/opt/orphanx/)
-┌──────────────┐   SSH + GitHub   ┌──────────────────────────────────┐
-│              │─────────────────►│  MCP Server (port 8620)          │
-│  Claude Code │                  │  behind Cloudflare tunnel        │
-│  AI/MCP      │                  │  ├── audit_systems               │
-│  backend     │                  │  ├── classify_orphans            │
-└──────────────┘                  │  └── generate_report             │
-                                  │                                  │
-                                  │  Anthropic API key here          │
-                                  └────────────┬─────────────────────┘
-                                               │
-                    https://orphanx.chrisfrance.ai/sse
-                                               │
-                              ┌────────────────┼────────────────┐
-                              │                │                │
-                              ▼                ▼                ▼
-                    ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-                    │  Ignacio     │ │  Oskar       │ │  Petra       │
-                    │  Dynamo+Revit│ │  Dynamo+Revit│ │  Dynamo+Revit│
-                    │  (demo mach) │ │  (backup)    │ │  (model prep)│
-                    │  Revit 2024+ │ │  Revit 2024+ │ │  Revit 2024+ │
-                    │  Dynamo 3.x  │ │  Dynamo 3.x  │ │  Dynamo 3.x  │
-                    │  MCP beta ext│ │  MCP beta ext│ │  MCP beta ext│
-                    └──────────────┘ └──────────────┘ └──────────────┘
+### Transport: SSE (Server-Sent Events)
+
+The MCP server uses SSE transport over HTTPS. The client (our Dynamo script) follows this protocol:
+
+1. **Connect:** `GET https://orphanx.chrisfrance.ai/sse` — opens persistent SSE stream
+2. **Get endpoint:** Server sends `data: /messages/?session_id=xxx` on the SSE stream
+3. **Initialize:** `POST /messages/?session_id=xxx` with JSON-RPC `initialize` request
+4. **Read init response** from SSE stream (not from POST body — POST just returns "Accepted")
+5. **Notify:** `POST` with `notifications/initialized`
+6. **Call tool:** `POST` with `tools/call` — e.g., `audit_systems` with `systems_json` argument
+7. **Read result** from SSE stream — JSON-RPC response with findings
+8. **Close** SSE stream
+
+**Key gotcha:** The POST response body is always "Accepted". The actual JSON-RPC result comes back on the SSE stream. You MUST keep the SSE stream open while making POST calls.
+
+### Server Code (`server/main.py`)
+
+```python
+from mcp.server.fastmcp import FastMCP
+import anthropic
+
+mcp = FastMCP("orphan-x", host="0.0.0.0", port=8620)
+claude = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+MODEL = "claude-sonnet-4-6"
+
+def _call_claude(system_prompt, user_content, max_tokens=4096):
+    response = claude.messages.create(
+        model=MODEL,
+        max_tokens=max_tokens,
+        system=system_prompt,
+        messages=[{"role": "user", "content": user_content}],
+    )
+    return response.content[0].text
+
+@mcp.tool()
+def audit_systems(systems_json: str) -> str:
+    result = _call_claude(AUDIT_SYSTEM_PROMPT, user_msg, max_tokens=8192)
+    return json.dumps(parsed_result)
 ```
 
-**Code flow:** Chris edits on Mac → pushes to GitHub → deploys to VPS → live instantly. Windows team just re-runs the Dynamo graph.
+### Three MCP Tools
+
+| Tool | Input | What it does | Output |
+|------|-------|-------------|--------|
+| `audit_systems` | JSON with systems + elements + connections | Claude traces network topology, finds dead legs, broken chains, code violations | JSON array of findings with severity, element IDs, code references |
+| `classify_orphans` | JSON with orphaned elements + nearest neighbors | Claude determines likely system, assesses risk | JSON array of classifications with confidence, severity |
+| `generate_report` | Combined findings from above | Claude writes plain-English QA/QC report | Formatted text report organized by severity |
+
+### System Prompts (`server/prompts.py`)
+
+The AI intelligence lives in three system prompts:
+
+**AUDIT_SYSTEM_PROMPT** — Full MEP engineering knowledge:
+- System completeness chains (AHU → duct → VAV → diffuser, etc.)
+- Dead leg detection: pipe connected one end, dead-end other end, stagnant water
+- ASHRAE 188: dead legs >6x pipe diameter = Legionella stagnation risk
+- NFPA 13: sprinkler coverage requirements
+- IPC 901.2: venting requirements for sanitary waste
+- Severity tiers: Patient Safety > Life Safety > Code Violation > Major > Minor
+- False positive management: capped stubs, backup circuits, test ports are OK
+
+**CLASSIFY_ORPHANS_PROMPT** — Orphan element classification:
+- Match orphans to likely systems by category, family, type, proximity
+- Hospital context: orphaned HVAC in patient areas = infection control risk
+
+**REPORT_PROMPT** — Report generation:
+- Organize by severity, plain English, actionable recommendations
+
+### Dead Leg Detection — How It Works
+
+The `connected_to` field on every element is the key. When Claude receives the system data, it sees:
+
+```json
+{
+  "system_type": "DomesticHotWater",
+  "elements": [
+    {"element_id": "100", "category": "Pipes", "connected_to": ["101", "102"]},
+    {"element_id": "101", "category": "Pipe Fittings", "connected_to": ["100", "103"]},
+    {"element_id": "102", "category": "Pipes", "connected_to": ["100"]},  // ← DEAD END
+  ]
+}
+```
+
+Element 102 connects to 100 but nothing on the other end. On a domestic hot water system in a hospital, that's a dead leg where water stagnates and Legionella grows. Claude flags it as Critical - Patient Safety with ASHRAE 188 reference.
 
 ---
 
-**Server is LIVE. Windows team: install Dynamo MCP beta extension, connect to `https://orphanx.chrisfrance.ai/sse`, and start discovery + model prep.**
+## Replacing Claude with a Local LLM
+
+The MCP server is designed so the LLM is a single swap point. Everything else stays the same.
+
+### What to change
+
+Only ONE function in `server/main.py`:
+
+```python
+# CURRENT: Claude API
+def _call_claude(system_prompt, user_content, max_tokens=4096):
+    response = claude.messages.create(
+        model=MODEL,
+        max_tokens=max_tokens,
+        system=system_prompt,
+        messages=[{"role": "user", "content": user_content}],
+    )
+    return response.content[0].text
+```
+
+### Option 1: Ollama (local, free)
+
+```python
+import requests
+
+OLLAMA_URL = "http://localhost:11434/api/chat"
+OLLAMA_MODEL = "llama3.1:70b"  # or mistral, gemma2, etc.
+
+def _call_llm(system_prompt, user_content, max_tokens=4096):
+    response = requests.post(OLLAMA_URL, json={
+        "model": OLLAMA_MODEL,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_content},
+        ],
+        "stream": False,
+        "options": {"num_predict": max_tokens},
+    })
+    return response.json()["message"]["content"]
+```
+
+Install: `curl -fsSL https://ollama.com/install.sh | sh && ollama pull llama3.1:70b`
+
+### Option 2: vLLM (local, faster for large models)
+
+```python
+from openai import OpenAI
+
+client = OpenAI(base_url="http://localhost:8000/v1", api_key="not-needed")
+
+def _call_llm(system_prompt, user_content, max_tokens=4096):
+    response = client.chat.completions.create(
+        model="meta-llama/Llama-3.1-70B-Instruct",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_content},
+        ],
+        max_tokens=max_tokens,
+    )
+    return response.choices[0].message.content
+```
+
+### Option 3: Any OpenAI-compatible API
+
+```python
+from openai import OpenAI
+
+client = OpenAI(base_url="https://your-server/v1", api_key="your-key")
+
+def _call_llm(system_prompt, user_content, max_tokens=4096):
+    response = client.chat.completions.create(
+        model="your-model",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_content},
+        ],
+        max_tokens=max_tokens,
+    )
+    return response.choices[0].message.content
+```
+
+### What stays the same
+
+- FastMCP server (SSE transport, 3 tools, JSON-RPC protocol)
+- System prompts (ASHRAE 188, NFPA 13, IPC knowledge)
+- Dynamo script (extraction, MCP call, color overrides)
+- Input/output JSON format
+- The entire Revit integration
+
+### LLM requirements for this use case
+
+- **Must handle long context** — system data can be 50K+ tokens for large models
+- **Must follow JSON output instructions** — the prompts say "return ONLY valid JSON"
+- **Recommended minimum:** 70B parameter model for reliable MEP reasoning
+- **Tested with:** Claude Sonnet 4.6 (cloud API)
+- **Untested but should work:** Llama 3.1 70B, Mistral Large, Gemma 2 27B
+- **Too small:** 7B/8B models will hallucinate findings and miss real issues
+
+---
+
+## VPS Deployment
+
+- **VPS:** DigitalOcean 162.243.184.115, Ubuntu 24.04
+- **Code:** `/opt/orphanx/` with Python 3.12 venv
+- **Tunnel:** Cloudflare tunnel routes `orphanx.chrisfrance.ai` → `localhost:8620`
+- **Env:** `.env` file with `ANTHROPIC_API_KEY`
+- **Deploy:** `ssh root@162.243.184.115`, edit files, restart process
+
+### Dependencies
+
+```
+fastmcp
+anthropic
+python-dotenv
+```
+
+---
+
+## Dynamo Script — Client Side
+
+One Python Script node in Dynamo (CPython3) does everything:
+
+**File:** `dynamo/orphanx_all_in_one.py`
+
+### Phase 1: Extract
+- `FilteredElementCollector` gets MechanicalSystem, PipingSystem, ElectricalSystem
+- For each system: get elements via `DuctNetwork`, `PipingNetwork`, or `.Elements`
+- For each element: serialize ID, category, family, type, level, connections, parameters
+- Revit 2026 compat: `eid_int()` helper (`.Value` vs `.IntegerValue`)
+
+### Phase 2: Find Orphans
+- Collect all element IDs that belong to any system
+- Scan 14 MEP categories for elements NOT in the set
+- For each orphan: find 3 nearest system elements by Euclidean distance
+
+### Phase 3: Call MCP Server
+- SSE + JSON-RPC protocol (see transport section above)
+- Sends `systems_json` to `audit_systems`, `orphans_json` to `classify_orphans`
+- SSL bypass for corporate networks
+- 120-second timeout for AI analysis
+
+### Phase 4: Apply Overrides
+- Map severity → color (RED/ORANGE/YELLOW/CYAN/GRAY)
+- Create or reuse "Orphan X - QA Audit" 3D view
+- Apply `OverrideGraphicSettings` to each flagged element
+- Solid fill pattern + line weight by severity
+
+### Output Files (saved to Desktop)
+- `orphanx_log.txt` — full run log
+- `orphanx_results.json` — AI findings + errors
+- `orphanx_extraction.json` — raw system/orphan data for manual analysis
+
+---
+
+## Presentation (3 minutes)
+
+| Section | Time | Content |
+|---------|------|---------|
+| Intro | 15s | Team name, one-line pitch |
+| Problem | 30s | Dead legs → Legionella → patients die. Engineer takes 3 days to audit. |
+| Product | 60s | One script, one click, AI traces every pipe. Finds what humans miss. |
+| Demo | 45s | Run script, show color-coded model, zoom to red dead leg |
+| Wrap-up | 30s | 3 days → 60 seconds. Works on any model. Swappable AI. |
