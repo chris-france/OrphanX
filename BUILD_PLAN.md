@@ -12,6 +12,36 @@
 
 ---
 
+## Machine Setup: Oskar + Ignacio Have Admin
+
+Oskar and Ignacio have admin access and can install software. This eliminates our biggest risk (network connectivity). Strategy:
+
+**Ignacio's machine = the demo machine.** Runs Dynamo + Revit + the MCP server locally. Agentic node connects to `localhost:8620`. No WiFi dependency.
+
+### Install on Ignacio's machine (first thing):
+```powershell
+# Python 3.12
+winget install Python.Python.3.12
+
+# Git (to pull from repo)
+winget install Git.Git
+
+# Then in a terminal:
+git clone https://github.com/ibenitosoto/OrphanX.git
+cd OrphanX/server
+python -m venv venv
+venv\Scripts\activate
+pip install fastmcp anthropic fastapi uvicorn requests
+```
+
+### Install on Oskar's machine (backup):
+Same setup. If Ignacio's machine has issues, Oskar's is ready to go.
+
+### Chris builds on Mac, pushes to GitHub, they pull.
+Chris writes all the code → pushes to repo → Ignacio/Oskar `git pull` → restart server. Fast iteration loop.
+
+---
+
 ## Critical First Hour: Discovery (8:00 – 9:00)
 
 Before writing a single line of production code, we need answers to questions that determine the entire architecture.
@@ -165,13 +195,12 @@ Build the downstream Dynamo nodes that apply visual results:
 
 ## Phase 2: Integration (11:30 – 1:00, through lunch)
 
-### Network Setup
-- Chris's Mac IP: run `ifconfig en0` → note the IP
-- Windows machines connect to: `http://<mac-ip>:8620/sse`
-- If hackathon WiFi blocks inter-device traffic (common!):
-  - **Fallback 1:** Mobile hotspot — connect all machines to Chris's phone
-  - **Fallback 2:** Run MCP server on the Windows machine directly (Chris copies code over USB)
-  - **Fallback 3:** Chris tunnels via ngrok: `ngrok http 8620` → public URL
+### Network Setup (SIMPLIFIED — server runs locally)
+- MCP server runs on **Ignacio's machine** (same machine as Dynamo)
+- Agentic node connects to `http://localhost:8620/sse` — no WiFi dependency
+- Chris pushes code to GitHub → Ignacio runs `git pull` in the OrphanX folder → restarts server
+- **Oskar's machine is the backup** — same setup, ready to go if Ignacio's has issues
+- Only external network needed: Anthropic API (Claude) — standard HTTPS outbound
 
 ### Connect the Pipeline
 1. Agentic Node #1 extracts real system data from seeded model
@@ -244,9 +273,9 @@ If the live demo breaks (it's a hackathon — things break):
 
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| Agentic nodes can't connect to external MCP | Medium | High | Fallback: Python Script node makes HTTP POST to Chris's server |
+| Agentic nodes can't connect to external MCP | Medium | High | Fallback: Python Script node makes HTTP POST to localhost:8620 |
 | Revit MCP doesn't expose system/connectivity data | Medium | High | Fallback: Python Script node queries Revit API directly |
-| Hackathon WiFi blocks inter-device traffic | High | Medium | Mobile hotspot, or run server on Windows machine, or ngrok tunnel |
+| ~~Hackathon WiFi blocks inter-device traffic~~ | ~~High~~ | ~~Medium~~ | **ELIMINATED** — MCP server runs on same machine as Dynamo (localhost) |
 | AI produces false positives | Medium | Medium | MEP team reviews and tunes system prompt during Phase 3 |
 | Snowdon Towers lacks enough MEP data | Low | Medium | Use rme_advanced_sample_project.rvt instead, or seed more test cases |
 | .dyn graph generated on Mac doesn't open in Dynamo | Low | Medium | Team builds graph manually on Windows using Chris's node specs |
@@ -290,23 +319,33 @@ OrphanX/
 ## Network Diagram (Hackathon Setup)
 
 ```
-   Chris's Mac                    Windows Machine (Dynamo)
-┌──────────────┐              ┌───────────────────────┐
-│              │   WiFi/LAN   │                       │
-│  MCP Server  │◄────────────►│  Dynamo + Revit       │
-│  port 8620   │   SSE/HTTP   │                       │
-│              │              │  Agentic Node → MCP   │
-│  Claude API  │              │  Python Scripts        │
-│  (internet)  │              │  View Overrides        │
-└──────────────┘              └───────────────────────┘
-       │
-       │ HTTPS
-       ▼
-┌──────────────┐
-│ Anthropic API│
-│ (Claude)     │
-└──────────────┘
+   Chris's Mac                 Ignacio's Windows Machine (DEMO MACHINE)
+┌──────────────┐            ┌──────────────────────────────────────┐
+│              │  git push  │                                      │
+│  Claude Code │───────────►│  Dynamo + Revit                      │
+│  (writes all │  git pull  │  ├── Agentic Nodes                   │
+│   the code)  │            │  ├── Python Scripts                   │
+│              │            │  └── View Overrides                   │
+└──────────────┘            │                                      │
+                            │  MCP Server (localhost:8620)          │
+                            │  ├── audit_systems                    │
+                            │  ├── classify_orphans                 │
+                            │  └── generate_report                  │
+                            └──────────────┬───────────────────────┘
+                                           │ HTTPS
+                                           ▼
+                            ┌──────────────────────────┐
+                            │  Anthropic API (Claude)   │
+                            └──────────────────────────┘
+
+   Oskar's Windows Machine (BACKUP)
+┌──────────────────────────────────────┐
+│  Same setup — ready if Ignacio's     │
+│  machine has issues                  │
+└──────────────────────────────────────┘
 ```
+
+**Code flow:** Chris writes code on Mac → pushes to GitHub → Ignacio/Oskar `git pull` → restart server. Fast iteration, no file transfers needed.
 
 ---
 
