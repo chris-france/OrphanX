@@ -699,13 +699,18 @@ def parse_json(text):
             pass
     return None
 
-# Call audit_systems
+# Call audit_systems — pipes only (where dead legs live)
 audit_findings = []
-systems_with_elements = [s for s in systems_out if s.get("elements")]
-if systems_with_elements:
-    log("  Auditing {} systems with elements...".format(len(systems_with_elements)))
+_PIPE_TYPES = {"DomesticHotWater", "DomesticColdWater", "SanitaryWaste", "Storm",
+               "Hydronic", "Sprinkler", "Other"}
+_PIPE_DISCIPLINES = {"Plumbing", "FireProtection"}
+pipe_systems = [s for s in systems_out
+                if (s["system_type"] in _PIPE_TYPES or s["discipline"] in _PIPE_DISCIPLINES)
+                and s.get("elements")]
+if pipe_systems:
+    log("  Auditing {} piping systems...".format(len(pipe_systems)))
     try:
-        audit_payload = json.dumps({"building_type": BUILDING_TYPE, "systems": systems_with_elements})
+        audit_payload = json.dumps({"building_type": BUILDING_TYPE, "systems": pipe_systems})
         user_msg = "Analyze these MEP systems. Return ONLY JSON with findings array.\n\n" + audit_payload
         raw = call_claude(AUDIT_PROMPT, user_msg)
         parsed = parse_json(raw)

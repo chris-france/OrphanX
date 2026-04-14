@@ -508,7 +508,17 @@ if errors:
     for e in errors[:5]:
         log("    ERROR: {}".format(e))
 
-systems_payload = json.dumps({"building_type": BUILDING_TYPE, "systems": systems_out})
+# Filter to piping systems only — these are where dead legs live
+# Keeps payload small enough for AI to process without timeout
+_PIPE_TYPES = {"DomesticHotWater", "DomesticColdWater", "SanitaryWaste", "Storm",
+               "Hydronic", "Sprinkler", "Other"}
+_PIPE_DISCIPLINES = {"Plumbing", "FireProtection"}
+pipe_systems = [s for s in systems_out
+                if (s["system_type"] in _PIPE_TYPES or s["discipline"] in _PIPE_DISCIPLINES)
+                and s.get("elements")]
+pipe_elements = sum(len(s["elements"]) for s in pipe_systems)
+log("  Sending {} piping systems with {} elements to AI".format(len(pipe_systems), pipe_elements))
+systems_payload = json.dumps({"building_type": BUILDING_TYPE, "systems": pipe_systems})
 
 # ============================================================================
 # PHASE 2: FIND ORPHANED ELEMENTS

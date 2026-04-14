@@ -186,20 +186,27 @@ Findings Data:
 if __name__ == "__main__":
     if ORPHANX_API_KEY:
         import uvicorn
-        from starlette.middleware.base import BaseHTTPMiddleware
-        from starlette.responses import PlainTextResponse
 
-        class APIKeyAuth(BaseHTTPMiddleware):
-            async def dispatch(self, request, call_next):
-                key = request.headers.get("Authorization", "").replace("Bearer ", "")
-                if not key:
-                    key = request.headers.get("X-API-Key", "")
-                if key != ORPHANX_API_KEY:
-                    return PlainTextResponse("Unauthorized", status_code=401)
-                return await call_next(request)
+        class APIKeyAuth:
+            """Pure ASGI middleware — doesn't break SSE streaming like BaseHTTPMiddleware does."""
+            def __init__(self, app):
+                self.app = app
+            async def __call__(self, scope, receive, send):
+                if scope["type"] == "http":
+                    headers = dict(scope.get("headers", []))
+                    auth = headers.get(b"authorization", b"").decode()
+                    key = auth.replace("Bearer ", "") if auth else ""
+                    if not key:
+                        key = headers.get(b"x-api-key", b"").decode()
+                    if key != ORPHANX_API_KEY:
+                        await send({"type": "http.response.start", "status": 401,
+                                    "headers": [(b"content-type", b"text/plain")]})
+                        await send({"type": "http.response.body", "body": b"Unauthorized"})
+                        return
+                await self.app(scope, receive, send)
 
         app = mcp.sse_app()
-        app.add_middleware(APIKeyAuth)
+        app = APIKeyAuth(app)
         print("Orphan X MCP server starting WITH API key auth on :8620")
         uvicorn.run(app, host="0.0.0.0", port=8620)
     else:
