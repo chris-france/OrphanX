@@ -262,14 +262,22 @@ One Python Script node in Dynamo (CPython3) does everything:
 
 ### Phase 1: Extract
 - `FilteredElementCollector` gets MechanicalSystem, PipingSystem, ElectricalSystem
-- For each system: get elements via `DuctNetwork`, `PipingNetwork`, or `.Elements`
+- **Reverse index approach:** `DuctNetwork`/`PipingNetwork`/`.Elements` return empty on Revit 2026. So we scan ALL MEP elements first, read their `RBS_SYSTEM_NAME_PARAM`, and build a map of element→system. Then we populate each system's element list from this index.
 - For each element: serialize ID, category, family, type, level, connections, parameters
 - Revit 2026 compat: `eid_int()` helper (`.Value` vs `.IntegerValue`)
 
 ### Phase 2: Find Orphans
-- Collect all element IDs that belong to any system
+- Collect all element IDs that belong to any system (from reverse index + network iteration)
 - Scan 14 MEP categories for elements NOT in the set
 - For each orphan: find 3 nearest system elements by Euclidean distance
+
+### Known Revit 2026 Issues
+- `ElementId.Value` replaces `.IntegerValue` — use `eid_int()` helper everywhere
+- `PipeSystemType`/`DuctSystemType` enum members may not exist — use `getattr()` with fallback
+- `str(system.SystemType)` returns integers ("1", "2") not names ("SupplyAir") — name-based fallback
+- `system.DuctNetwork` / `system.PipingNetwork` / `system.Elements` return empty — reverse index via `RBS_SYSTEM_NAME_PARAM`
+- .NET collections may not evaluate as truthy in CPython3 — use `is not None` checks
+- Desktop path may not exist on some Windows profiles — try Desktop, Documents, home, temp
 
 ### Phase 3: Call MCP Server
 - SSE + JSON-RPC protocol (see transport section above)

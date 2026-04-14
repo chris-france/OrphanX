@@ -16,7 +16,8 @@
 7. Wait 30-60 seconds
 
 **What happens during those 60 seconds:**
-- The script reads the Revit model — finds ~1,100 systems, ~18,000 elements
+- The script scans all MEP elements and builds an element→system index (reverse lookup — Revit 2026 fix)
+- It finds ~1,100 systems and maps ~18,000 elements to them
 - It identifies which elements aren't connected to any system (orphans)
 - It connects over the internet to orphanx.chrisfrance.ai
 - Claude reads the full system topology and finds dead legs, code violations, safety risks
@@ -141,6 +142,17 @@ Shows: system counts, element counts, sample data. No server needed.
 
 ---
 
+### Output Files
+
+The script saves three files (tries Desktop, then Documents, then home, then temp):
+- **orphanx_log.txt** — full Watch node output
+- **orphanx_results.json** — AI findings, errors, severity breakdown
+- **orphanx_extraction.json** — raw system/orphan data for manual analysis
+
+Push these to GitHub so Chris can analyze them.
+
+---
+
 ## Troubleshooting
 
 | Problem | Fix |
@@ -148,6 +160,8 @@ Shows: system counts, element counts, sample data. No server needed.
 | "No module named RevitAPI" | Right-click Python node → Engine → **CPython3** |
 | SSL errors | Script already handles this. If still failing, try phone hotspot. |
 | Timeout on server call | AI takes 10-30 sec. Script has 120 sec timeout. Be patient. |
+| 0 elements in systems | Fixed in latest version — uses reverse index. Re-paste from GitHub. |
+| File save error (Desktop not found) | Fixed in latest version — tries multiple paths. Re-paste from GitHub. |
 | Empty extraction output | Model may not have MEP systems. Run Test 3. |
 | Can't reach orphanx.chrisfrance.ai | Try phone hotspot. Check Test 0 first. |
 | Python node has no Engine option | Dynamo too old. Need Dynamo 2.13+ for CPython3. |
