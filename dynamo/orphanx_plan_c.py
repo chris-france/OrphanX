@@ -101,16 +101,31 @@ def _safe_name(obj, attr="Name"):
     return "Unknown"
 
 def _get_family_name(elem):
+    # Try Symbol.Family.Name (loaded families)
     try:
-        fam = elem.Symbol
-        if fam:
-            return _safe_name(fam.Family)
+        sym = elem.Symbol
+        if sym and sym.Family:
+            n = str(sym.Family.Name)
+            if n:
+                return n
     except Exception:
         pass
+    # Try type's FamilyName property (system families like pipes/fittings)
     try:
         etype = doc.GetElement(elem.GetTypeId())
-        if etype:
-            return _safe_name(etype.FamilyName) if hasattr(etype, "FamilyName") else _safe_name(etype)
+        if etype and hasattr(etype, "FamilyName"):
+            n = str(etype.FamilyName)
+            if n:
+                return n
+    except Exception:
+        pass
+    # Try BuiltInParameter (most reliable fallback)
+    try:
+        p = elem.get_Parameter(BuiltInParameter.ELEM_FAMILY_PARAM)
+        if p:
+            n = p.AsValueString()
+            if n:
+                return n
     except Exception:
         pass
     return "Unknown"
@@ -119,7 +134,17 @@ def _get_type_name(elem):
     try:
         etype = doc.GetElement(elem.GetTypeId())
         if etype:
-            return _safe_name(etype)
+            n = str(etype.Name) if hasattr(etype, "Name") else None
+            if n:
+                return n
+    except Exception:
+        pass
+    try:
+        p = elem.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM)
+        if p:
+            n = p.AsValueString()
+            if n:
+                return n
     except Exception:
         pass
     return "Unknown"
@@ -768,6 +793,18 @@ for s in systems_out:
     if cap_count > 0:
         summary["caps_plugs"] = cap_count
     pipe_summaries.append(summary)
+# Debug: show unique families so we know if extraction is working
+all_families = set()
+for s in systems_out:
+    for e in s.get("elements", []):
+        f = e.get("family", "Unknown")
+        if f != "Unknown":
+            all_families.add(f)
+if all_families:
+    sample = sorted(all_families)[:15]
+    log("  Sample families found: {}".format(", ".join(sample)))
+else:
+    log("  WARNING: All families are 'Unknown' — cap detection won't work")
 log("  {} piping systems, {} total caps/plugs detected".format(len(pipe_summaries), total_caps))
 if pipe_summaries:
     log("  Auditing {} piping systems (summary mode)...".format(len(pipe_summaries)))
