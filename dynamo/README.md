@@ -12,9 +12,9 @@ access to the Revit API. They are designed for Revit 2024 and 2025.
 The Orphan X MCP server accepts the JSON output from these scripts and returns
 AI-powered audit findings.
 
-- **URL:** https://hackathon.chrisfrance.ai/
-- **SSE endpoint:** https://hackathon.chrisfrance.ai/sse
-- **Health check:** https://hackathon.chrisfrance.ai/health
+- **URL:** https://orphanx.chrisfrance.ai/
+- **SSE endpoint:** https://orphanx.chrisfrance.ai/sse
+- **Health check:** https://orphanx.chrisfrance.ai/health
 
 MCP Tools:
 - `audit_systems` -- receives system data, returns completeness findings
@@ -141,7 +141,7 @@ Create a Dynamo graph with these nodes connected in sequence:
 
 For the agentic nodes that call the MCP server:
 
-1. Set MCP Server URL to: `https://hackathon.chrisfrance.ai/sse`
+1. Set MCP Server URL to: `https://orphanx.chrisfrance.ai/sse`
 2. Tool name: `audit_systems` or `classify_orphans`
 3. Input: the JSON string output from the corresponding Python Script node
 
@@ -157,7 +157,7 @@ import urllib.request
 # IN[0] = JSON payload from extract_mep_systems.py
 payload = IN[0]
 
-url = "https://hackathon.chrisfrance.ai/sse"
+url = "https://orphanx.chrisfrance.ai/sse"
 req = urllib.request.Request(
     url,
     data=json.dumps({"tool": "audit_systems", "input": payload}).encode("utf-8"),
