@@ -321,28 +321,34 @@ def _get_pipe_type(sys):
 def _get_system_elements(system):
     elements = []
     seen_ids = set()
-    elem_set = None
+
+    # Try all known ways to get elements from a system
+    elem_sources = []
     try:
         if isinstance(system, MechanicalSystem):
-            elem_set = system.DuctNetwork
-        elif isinstance(system, PipingSystem):
-            elem_set = system.PipingNetwork
-        elif isinstance(system, ElectricalSystem):
-            elem_set = system.Elements
-    except Exception:
-        pass
-    if elem_set:
-        for elem in elem_set:
             try:
-                eid = eid_int(elem.Id)
-                if eid not in seen_ids:
-                    seen_ids.add(eid)
-                    elements.append(_serialize_element(elem))
+                elem_sources.append(system.DuctNetwork)
             except Exception:
                 pass
-    if not elements:
+        elif isinstance(system, PipingSystem):
+            try:
+                elem_sources.append(system.PipingNetwork)
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    # Always try .Elements as fallback
+    try:
+        elem_sources.append(system.Elements)
+    except Exception:
+        pass
+
+    for source in elem_sources:
+        if source is None:
+            continue
         try:
-            for elem in system.Elements:
+            for elem in source:
                 try:
                     eid = eid_int(elem.Id)
                     if eid not in seen_ids:
@@ -352,6 +358,9 @@ def _get_system_elements(system):
                     pass
         except Exception:
             pass
+        if elements:
+            break
+
     return elements
 
 # ============================================================================
@@ -440,45 +449,37 @@ ORPHAN_CATEGORIES = [
 system_element_ids = set()
 system_element_info = {}
 
-for sys in FilteredElementCollector(doc).OfClass(MechanicalSystem).ToElements():
-    sys_name = _safe_name(sys)
-    try:
-        network = sys.DuctNetwork
-        if network:
-            for elem in network:
-                eid = eid_int(elem.Id)
-                system_element_ids.add(eid)
-                if eid not in system_element_info:
-                    system_element_info[eid] = {"system_name": sys_name, "xyz": _get_location_xyz(elem)}
-    except Exception:
+def _collect_system_members(sys_obj, sys_name):
+    """Collect element IDs from a system using all available methods."""
+    sources = []
+    if isinstance(sys_obj, MechanicalSystem):
+        try: sources.append(sys_obj.DuctNetwork)
+        except Exception: pass
+    elif isinstance(sys_obj, PipingSystem):
+        try: sources.append(sys_obj.PipingNetwork)
+        except Exception: pass
+    try: sources.append(sys_obj.Elements)
+    except Exception: pass
+    for source in sources:
+        if source is None:
+            continue
         try:
-            for elem in sys.Elements:
-                eid = eid_int(elem.Id)
-                system_element_ids.add(eid)
-                if eid not in system_element_info:
-                    system_element_info[eid] = {"system_name": sys_name, "xyz": _get_location_xyz(elem)}
+            for elem in source:
+                try:
+                    eid = eid_int(elem.Id)
+                    system_element_ids.add(eid)
+                    if eid not in system_element_info:
+                        system_element_info[eid] = {"system_name": sys_name, "xyz": _get_location_xyz(elem)}
+                except Exception:
+                    pass
         except Exception:
             pass
 
+for sys in FilteredElementCollector(doc).OfClass(MechanicalSystem).ToElements():
+    _collect_system_members(sys, _safe_name(sys))
+
 for sys in FilteredElementCollector(doc).OfClass(PipingSystem).ToElements():
-    sys_name = _safe_name(sys)
-    try:
-        network = sys.PipingNetwork
-        if network:
-            for elem in network:
-                eid = eid_int(elem.Id)
-                system_element_ids.add(eid)
-                if eid not in system_element_info:
-                    system_element_info[eid] = {"system_name": sys_name, "xyz": _get_location_xyz(elem)}
-    except Exception:
-        try:
-            for elem in sys.Elements:
-                eid = eid_int(elem.Id)
-                system_element_ids.add(eid)
-                if eid not in system_element_info:
-                    system_element_info[eid] = {"system_name": sys_name, "xyz": _get_location_xyz(elem)}
-        except Exception:
-            pass
+    _collect_system_members(sys, _safe_name(sys))
 
 for sys in FilteredElementCollector(doc).OfClass(ElectricalSystem).ToElements():
     sys_name = _safe_name(sys)
