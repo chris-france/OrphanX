@@ -741,19 +741,18 @@ for bic in _PIPE_END_CATS:
                         continue
                 if conn_mgr is None:
                     continue
-                total_end = 0
-                connected_end = 0
+                total_conns = 0
+                connected_conns = 0
                 for conn in conn_mgr.Connectors:
                     try:
-                        if conn.ConnectorType == ConnectorType.End:
-                            total_end += 1
-                            if conn.IsConnected:
-                                connected_end += 1
+                        total_conns += 1
+                        if conn.IsConnected:
+                            connected_conns += 1
                     except Exception:
                         pass
-                # Single-connector element = cap/plug/terminal
+                # Single-connector = cap/plug/terminal
                 # Multi-connector with open ports = unused branch
-                if total_end == 1 or (total_end > 1 and connected_end > 0 and connected_end < total_end):
+                if total_conns == 1 or (total_conns > 1 and connected_conns > 0 and connected_conns < total_conns):
                     dead_end_count += 1
                     branch = _trace_branch(elem, max_hops=2)
                     dead_end_branch_elements.update(branch)
