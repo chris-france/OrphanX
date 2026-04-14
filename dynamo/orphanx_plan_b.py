@@ -704,11 +704,21 @@ audit_findings = []
 _PIPE_TYPES = {"DomesticHotWater", "DomesticColdWater", "SanitaryWaste", "Storm",
                "Hydronic", "Sprinkler", "Other"}
 _PIPE_DISCIPLINES = {"Plumbing", "FireProtection"}
-pipe_systems = [s for s in systems_out
-                if (s["system_type"] in _PIPE_TYPES or s["discipline"] in _PIPE_DISCIPLINES)
-                and s.get("elements")]
+pipe_systems = []
+for s in systems_out:
+    if not s.get("elements"):
+        continue
+    if s["system_type"] not in _PIPE_TYPES and s["discipline"] not in _PIPE_DISCIPLINES:
+        continue
+    slim_elems = [{"element_id": e["element_id"], "category": e.get("category", ""),
+                   "connected_to": e.get("connected_to", [])}
+                  for e in s["elements"]]
+    pipe_systems.append({
+        "system_id": s["system_id"], "system_name": s["system_name"],
+        "system_type": s["system_type"], "elements": slim_elems,
+    })
 if pipe_systems:
-    log("  Auditing {} piping systems...".format(len(pipe_systems)))
+    log("  Auditing {} piping systems (slim)...".format(len(pipe_systems)))
     try:
         audit_payload = json.dumps({"building_type": BUILDING_TYPE, "systems": pipe_systems})
         user_msg = "Analyze these MEP systems. Return ONLY JSON with findings array.\n\n" + audit_payload

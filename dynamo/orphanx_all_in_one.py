@@ -513,11 +513,21 @@ if errors:
 _PIPE_TYPES = {"DomesticHotWater", "DomesticColdWater", "SanitaryWaste", "Storm",
                "Hydronic", "Sprinkler", "Other"}
 _PIPE_DISCIPLINES = {"Plumbing", "FireProtection"}
-pipe_systems = [s for s in systems_out
-                if (s["system_type"] in _PIPE_TYPES or s["discipline"] in _PIPE_DISCIPLINES)
-                and s.get("elements")]
+pipe_systems = []
+for s in systems_out:
+    if not s.get("elements"):
+        continue
+    if s["system_type"] not in _PIPE_TYPES and s["discipline"] not in _PIPE_DISCIPLINES:
+        continue
+    slim_elems = [{"element_id": e["element_id"], "category": e.get("category", ""),
+                   "connected_to": e.get("connected_to", [])}
+                  for e in s["elements"]]
+    pipe_systems.append({
+        "system_id": s["system_id"], "system_name": s["system_name"],
+        "system_type": s["system_type"], "elements": slim_elems,
+    })
 pipe_elements = sum(len(s["elements"]) for s in pipe_systems)
-log("  Sending {} piping systems with {} elements to AI".format(len(pipe_systems), pipe_elements))
+log("  Sending {} piping systems with {} elements to AI (slim)".format(len(pipe_systems), pipe_elements))
 systems_payload = json.dumps({"building_type": BUILDING_TYPE, "systems": pipe_systems})
 
 # ============================================================================
@@ -656,7 +666,7 @@ def call_mcp_tool(tool_name, arg_name, arg_value):
         # Step 1: Open SSE stream (keep open — responses come back here)
         sse_req = urllib.request.Request(MCP_URL + "/sse")
         sse_req.add_header("Authorization", "Bearer " + MCP_API_KEY)
-        sse_stream = urllib.request.urlopen(sse_req, timeout=120, context=ctx)
+        sse_stream = urllib.request.urlopen(sse_req, timeout=300, context=ctx)
 
         endpoint = None
         for _ in range(20):
