@@ -7,17 +7,20 @@
 
 ## How This Works (Read This First)
 
-Three boxes in Dynamo, wired together:
+One Python Script node in Dynamo does everything:
+
+1. Reads every pipe, duct, and fitting from the Revit model
+2. Finds orphaned elements not connected to any system
+3. Sends data to our AI server (Claude analyzes for dead legs, code violations, patient safety)
+4. Colors elements in the model by severity
 
 ```
-[Extract from Revit]  →  [Agentic Node → our AI]  →  [Color the model]
-     Python Script          DynamoMCP alpha             Python Script
-     (reads Revit)          (calls our server)          (paints Revit)
+[Python Script Node]
+  ↓ Reads Revit model
+  ↓ Sends to AI server
+  ↓ Colors elements
+[Done — switch to 3D view]
 ```
-
-- **Box 1** reads every pipe, duct, and fitting from Revit. Pure local, no internet.
-- **Box 2** is the Agentic Node (DynamoMCP alpha feature). It sends that data to our AI server. Claude analyzes it and returns findings — dead legs, code violations, patient safety risks.
-- **Box 3** reads the AI findings and paints elements in the Revit model by severity (red = critical, orange = code violation, yellow = major, cyan = minor).
 
 ---
 
@@ -29,126 +32,99 @@ Open in any browser: `https://orphanx.chrisfrance.ai/sse`
 
 **If it fails:** Try phone hotspot. Your network blocks it.
 
+**Do this first.** If the browser can't reach it, the script won't either.
+
 ---
 
-## Test 1: The Full Demo (THE MAIN TEST)
-
-### Step 1: Open model + Dynamo
+## Test 1: Run the All-In-One Script (THE MAIN TEST — 5 min)
 
 1. Open the Hospital MEP model in Revit
 2. Open Dynamo
+3. Search for **Python Script** in the node library, drag it onto the canvas
+4. Right-click the node → **Engine → CPython3** (IMPORTANT)
+5. Double-click the node to open the code editor
+6. Go to GitHub: `https://github.com/ibenitosoto/OrphanX`
+7. Open `dynamo/orphanx_all_in_one.py`
+8. Click **Raw**, select all, copy
+9. Paste the ENTIRE script into the Python Script node
+10. Close the editor
+11. Click **Run** in Dynamo
+12. Wait 30-60 seconds (extraction + AI analysis takes time)
+13. Connect a **Watch** node to the output to see the log
+14. In Revit, switch to the **"Orphan X - QA Audit"** 3D view
 
-### Step 2: Create the Extract node
+### Expected Output in Watch Node
 
-1. Search for **Python Script** in the Dynamo node library
-2. Drag it onto the canvas
-3. Right-click the node → **Engine → CPython3** (IMPORTANT)
-4. Double-click the node to open the code editor
-5. Go to GitHub: `https://github.com/ibenitosoto/OrphanX`
-6. Open `dynamo/extract_for_agentic.py`
-7. Click "Raw", select all, copy
-8. Paste into the Python Script node
-9. Close the editor
+```
+============================================================
+ORPHAN X — MEP Systems Auditor
+============================================================
 
-### Step 3: Create the Agentic Node
+PHASE 1: Extracting MEP systems from Revit model...
+  Found X systems with Y elements
 
-**⚠️ This is the DynamoMCP alpha feature. Ask the Autodesk engineers if you can't find it.**
+PHASE 2: Finding orphaned elements...
+  Found Z orphaned elements
 
-We need an Agentic Node that:
-- Connects to MCP server URL: `https://orphanx.chrisfrance.ai/sse`
-- Calls tool: `audit_systems`
-- Takes one input argument: `systems_json` (the output from Step 2)
+PHASE 3: Sending data to Orphan X AI server...
+  Server: https://orphanx.chrisfrance.ai
+  Calling audit_systems...
+  Got N audit findings
+    [Critical - Patient Safety] dead_leg: ...
+    ...
 
-How to find it — try these in order:
-1. Search the node library for **"Agentic"** or **"Agent"** or **"MCP"** or **"Send Request"**
-2. Look for a panel or menu added by the DynamoMCP extension
-3. If you see `AgentProcess.GetAllAvailableTools` or `Send Request` — those are it
-4. **If you can't find it, ask the Autodesk engineers at the hackathon.** They built it. They know where it is.
+PHASE 4: Applying visual overrides to Revit model...
+  Applied M color overrides
 
-Once you have the Agentic Node:
-- Set the MCP server URL to: `https://orphanx.chrisfrance.ai/sse`
-- It should discover our tools automatically (`audit_systems`, `classify_orphans`, `generate_report`)
-- Select `audit_systems`
-- Wire the **output** of the Extract Python Script → **input** of the Agentic Node
+SUMMARY
+  Systems found: X
+  ...
+```
 
-### Step 4: Create the Override node
+### Expected in Revit
 
-1. Add another **Python Script** node (search "Python" in library)
-2. Right-click → **Engine → CPython3**
-3. Double-click to open editor
-4. Go to GitHub: `dynamo/apply_overrides.py`
-5. Click "Raw", select all, copy, paste
-6. Close the editor
-7. Wire the **output** of the Agentic Node → **IN[0]** of this Python Script
-
-### Step 5: Run
-
-1. Click **Run** in Dynamo
-2. Wait 30-60 seconds (extraction + AI analysis)
-3. In Revit, switch to the **"Orphan X - QA Audit"** 3D view
-
-### Expected Result
-
-**Watch node on Extract script:**
-- Large JSON blob with systems and elements
-
-**Watch node on Agentic Node output:**
-- AI findings with severities, element IDs, code references (ASHRAE 188, NFPA 13, IPC)
-
-**In Revit "Orphan X - QA Audit" view:**
-- RED = Critical Patient Safety / Life Safety (dead legs, disconnected sprinklers)
-- ORANGE = Critical Code Violation (missing vents)
-- YELLOW = Major
-- CYAN = Minor
+Switch to the "Orphan X - QA Audit" 3D view:
+- **RED** = Critical Patient Safety / Life Safety (dead legs, disconnected sprinklers)
+- **ORANGE** = Critical Code Violation (missing vents)
+- **YELLOW** = Major
+- **CYAN** = Minor
+- **GRAY** = Unclassified orphan
 
 ### Report to Chris
 
-- "X systems found, Y elements, N findings, M overrides applied"
+- "X systems, Y elements, Z orphans, N findings, M overrides"
 - Screenshot of the color-coded 3D view
-- Screenshot of Watch node outputs
+- Screenshot of the Watch node output
 - Any errors
 
 ---
 
-## Test 2: Fallback — If the Agentic Node Doesn't Work
+## Test 2: Extraction Only — No Server Needed (3 min)
 
-If you can't get the Agentic Node working (it IS alpha software), use the all-in-one fallback:
-
-1. Add ONE Python Script node → CPython3
-2. Paste `dynamo/orphanx_all_in_one.py` from GitHub
-3. Run
-4. This does everything in one script — extract, call server via HTTP, color model
-
-Less impressive for judges but proves the system works end-to-end.
-
----
-
-## Test 3: Extraction Only — No Server Needed
-
-If the server can't be reached, test that extraction works:
+If Test 1 fails on the server call, test that extraction works locally:
 
 1. Add Python Script node → CPython3
-2. Paste `dynamo/extract_for_agentic.py`
+2. Paste `dynamo/extract_for_agentic.py` from GitHub
 3. Run
-4. Connect a Watch node — you should see a big JSON blob
+4. Connect a Watch node
 
-**Report to Chris:**
-- How many systems? (search for `total_systems` in output)
-- How many elements? (search for `total_elements`)
-- How many orphans? (search for `total_orphans`)
+**Expected:** Large JSON blob with all MEP systems and orphans.
+
+Look for `total_systems`, `total_elements`, `total_orphans` near the end.
 
 This data is valuable even without the server — Chris can run it through the AI manually.
 
 ---
 
-## Test 4: Model Scanner — Debug Tool
+## Test 3: Model Scanner — Debug Tool (2 min)
 
-If everything is broken and you need to see what Revit exposes:
+If you need to see what's in the model:
 
 1. Add Python Script node → CPython3
-2. Paste `dynamo/scan_model.py`
+2. Paste `dynamo/scan_model.py` from GitHub
 3. Run
-4. Output shows: API classes available, system counts, element counts, sample data
+
+Shows: system counts, element counts, sample data. No server needed.
 
 ---
 
@@ -156,12 +132,11 @@ If everything is broken and you need to see what Revit exposes:
 
 | Problem | Fix |
 |---------|-----|
-| Can't find Agentic Node | Ask Autodesk engineers. Search "Agent" or "MCP" in node library. |
 | "No module named RevitAPI" | Right-click Python node → Engine → **CPython3** |
-| Agentic Node can't connect to server | Check Test 0 first. Try Test 2 fallback. |
-| SSL errors | Ask Autodesk engineers — Agentic Node should handle SSL |
-| Timeout on AI analysis | AI takes 10-30 sec. Be patient. If >60 sec, retry. |
-| Empty extraction output | Model may not have MEP systems. Run Test 4 to check. |
+| SSL errors | Script already handles this. If still failing, try phone hotspot. |
+| Timeout on server call | AI takes 10-30 sec. Script has 120 sec timeout. Be patient. |
+| Empty extraction output | Model may not have MEP systems. Run Test 3. |
+| Can't reach orphanx.chrisfrance.ai | Try phone hotspot. Check Test 0 first. |
 | Python node has no Engine option | Dynamo too old. Need Dynamo 2.13+ for CPython3. |
 
 ---
@@ -169,7 +144,6 @@ If everything is broken and you need to see what Revit exposes:
 ## Reporting Issues to Chris
 
 Send:
-1. Which test failed (0, 1, 2, 3, or 4)
+1. Which test failed (0, 1, 2, or 3)
 2. Screenshot of the error or Watch node output
 3. Did the browser test (Test 0) work?
-4. Could you find the Agentic Node?
