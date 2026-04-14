@@ -1,0 +1,350 @@
+{
+  "Uuid": "a1e78b06-3961-42ce-9926-e1f3bf03fbf2",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "Dynamo all in one script",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "Code": "import clr\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB.Plumbing import PipingSystem\r\nfrom RevitServices.Persistence import DocumentManager\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\ndata = []\r\n\r\n# 🔧 Safe ElementId\r\ndef eid(elem_id):\r\n    try:\r\n        return str(elem_id.Value)\r\n    except:\r\n        return str(elem_id.IntegerValue)\r\n\r\n# 🔹 Hitta vatten-system\r\nvalid_ids = set()\r\n\r\nsystems = FilteredElementCollector(doc).OfClass(PipingSystem).ToElements()\r\n\r\nfor sys in systems:\r\n    try:\r\n        name = sys.Name.lower()\r\n\r\n        if any(k in name for k in [\"water\", \"cold\", \"hot\", \"cw\", \"hw\", \"sprink\", \"fire\"]):\r\n            try:\r\n                for e in sys.PipingNetwork:\r\n                    valid_ids.add(eid(e.Id))\r\n            except:\r\n                pass\r\n    except:\r\n        pass\r\n\r\n\r\n# 🔹 Pipes\r\npipes = FilteredElementCollector(doc)\\\r\n    .OfCategory(BuiltInCategory.OST_PipeCurves)\\\r\n    .WhereElementIsNotElementType()\\\r\n    .ToElements()\r\n\r\n\r\ndef get_connectors(elem):\r\n    try:\r\n        return elem.ConnectorManager\r\n    except:\r\n        return None\r\n\r\n\r\nfor p in pipes:\r\n\r\n    pid = eid(p.Id)\r\n\r\n    if pid not in valid_ids:\r\n        continue\r\n\r\n    mgr = get_connectors(p)\r\n\r\n    conn_count = 0\r\n    connected_ids = []\r\n\r\n    if mgr:\r\n        try:\r\n            for c in mgr.Connectors:\r\n                conn_count += 1\r\n\r\n                if c.IsConnected:\r\n                    for ref in c.AllRefs:\r\n                        owner = ref.Owner\r\n                        if owner and owner.Id != p.Id:\r\n                            connected_ids.append(eid(owner.Id))\r\n        except:\r\n            pass\r\n\r\n    # 🔥 Output som LISTA av dicts (inte dict med int keys)\r\n    data.append({\r\n        \"id\": pid,\r\n        \"connectors\": int(conn_count),\r\n        \"connected_to\": connected_ids\r\n    })\r\n\r\nOUT = data",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "10b16069077444bbbf8b113fdf7c4fc2",
+      "NodeType": "PythonScriptNode",
+      "Inputs": [
+        {
+          "Id": "75898ad583194671bd2cb58641d62e01",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "3737a5d3c5d841eca4f1ca445926f7c3",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "WatchWidth": 200.0,
+      "WatchHeight": 200.0,
+      "Id": "06752190b9d34accae52145e4064a3a4",
+      "NodeType": "ExtensionNode",
+      "Inputs": [
+        {
+          "Id": "9c8910d4da6c4dd8ae8e8321de1a62b1",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "7b9632ee212c4716b5fcdefcb6e0d676",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualizes a node's output"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "Code": "data = IN[0]\r\n\r\norphans = []\r\ndead_ends = []\r\nisolated = []\r\n\r\nfor e in data:\r\n    try:\r\n        eid = e[\"id\"]\r\n        conn = e[\"connectors\"]\r\n        connected = len(e[\"connected_to\"])\r\n\r\n        # 🔴 Hard orphan (har connectors men ingen connection)\r\n        if conn > 0 and connected == 0:\r\n            orphans.append(eid)\r\n\r\n        # 🟡 Dead-end (ska normalt vara genomgående rör)\r\n        elif conn >= 2 and connected == 1:\r\n            dead_ends.append(eid)\r\n\r\n        # 🔵 Isolated (inga connectors alls)\r\n        elif conn == 0:\r\n            isolated.append(eid)\r\n\r\n    except:\r\n        pass\r\n\r\nOUT = {\r\n    \"orphans\": orphans,\r\n    \"dead_ends\": dead_ends,\r\n    \"isolated\": isolated\r\n}",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "07e0a38ca734424c9f5441bfdefa92ce",
+      "NodeType": "PythonScriptNode",
+      "Inputs": [
+        {
+          "Id": "6bd41aad61e24b228a80e0172909ffa0",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "c9bab012bb91436a91c7fcd950f40d21",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "WatchWidth": 200.0,
+      "WatchHeight": 200.0,
+      "Id": "e22ec214949f4e579cf7d90ec7a27cc7",
+      "NodeType": "ExtensionNode",
+      "Inputs": [
+        {
+          "Id": "392c53d102d84989bf47ce223e05f987",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "e0ce796547664032a5103fec8d3beca1",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualizes a node's output"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "Code": "import clr\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\nfrom Autodesk.Revit.DB import *\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom System.Collections.Generic import List\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\ndata = IN[0]\r\n\r\nVIEW_NAME = \"Colored 3D View\"\r\n\r\n# =====================================================\r\n# SAFE ElementId\r\n# =====================================================\r\ndef to_eid(id_str):\r\n    try:\r\n        return ElementId(int(id_str))\r\n    except:\r\n        return None\r\n\r\n# =====================================================\r\n# CREATE VIEW (ALWAYS NEW)\r\n# =====================================================\r\nTransactionManager.Instance.EnsureInTransaction(doc)\r\n\r\nvft_collector = FilteredElementCollector(doc).OfClass(ViewFamilyType).ToElements()\r\n\r\nview = None\r\nfor vft in vft_collector:\r\n    if vft.ViewFamily == ViewFamily.ThreeDimensional:\r\n        view = View3D.CreateIsometric(doc, vft.Id)\r\n        view.Name = VIEW_NAME\r\n        break\r\n\r\n# 🔥 ta bort template\r\ntry:\r\n    view.ViewTemplateId = ElementId.InvalidElementId\r\nexcept:\r\n    pass\r\n\r\nTransactionManager.Instance.TransactionTaskDone()\r\n\r\n# =====================================================\r\n# GET SOLID FILL\r\n# =====================================================\r\nsolid_fill_id = None\r\nfills = FilteredElementCollector(doc).OfClass(FillPatternElement).ToElements()\r\n\r\nfor f in fills:\r\n    try:\r\n        if f.GetFillPattern().IsSolidFill:\r\n            solid_fill_id = f.Id\r\n            break\r\n    except:\r\n        pass\r\n\r\n# =====================================================\r\n# COLOR + COLLECT IDS\r\n# =====================================================\r\nTransactionManager.Instance.EnsureInTransaction(doc)\r\n\r\nproblem_ids = []\r\ncount = 0\r\n\r\ndef process(ids, color):\r\n    global count\r\n\r\n    for i in ids:\r\n        eid = to_eid(i)\r\n        if not eid:\r\n            continue\r\n\r\n        e = doc.GetElement(eid)\r\n        if not e:\r\n            continue\r\n\r\n        problem_ids.append(e.Id)\r\n\r\n        try:\r\n            ogs = OverrideGraphicSettings()\r\n\r\n            ogs.SetProjectionLineColor(color)\r\n            ogs.SetCutLineColor(color)\r\n\r\n            if solid_fill_id:\r\n                ogs.SetSurfaceForegroundPatternId(solid_fill_id)\r\n                ogs.SetSurfaceForegroundPatternColor(color)\r\n\r\n            view.SetElementOverrides(e.Id, ogs)\r\n            count += 1\r\n\r\n        except:\r\n            pass\r\n\r\n# 🔴 ORPHANS\r\nprocess(data[\"orphans\"], Color(255, 0, 0))\r\n\r\n# 🟡 DEAD ENDS\r\nprocess(data[\"dead_ends\"], Color(255, 255, 0))\r\n\r\n# 🔵 ISOLATED\r\nprocess(data[\"isolated\"], Color(0, 255, 255))\r\n\r\n# =====================================================\r\n# 🔥 ISOLATE ELEMENTS (DETTA FIXAR ALLT)\r\n# =====================================================\r\nif problem_ids:\r\n    try:\r\n        view.IsolateElementsTemporary(List[ElementId](problem_ids))\r\n    except:\r\n        pass\r\n\r\nTransactionManager.Instance.TransactionTaskDone()\r\n\r\nOUT = \"Created view + isolated {} problem elements\".format(count)",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "c6201253c25a41d2924eb63332d9aa43",
+      "NodeType": "PythonScriptNode",
+      "Inputs": [
+        {
+          "Id": "97088e757fea4d64abed75777f61b08d",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "e14efe8e00d64963a776f88f38090f6d",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "WatchWidth": 350.0,
+      "WatchHeight": 40.0,
+      "Id": "2ade6c71b4354e549c38dff29b4cbdde",
+      "NodeType": "ExtensionNode",
+      "Inputs": [
+        {
+          "Id": "cdbbd91a6541417ca7cab382214477d7",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "153f6089deb245b880ed9ee38374b7c6",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualizes a node's output"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "3737a5d3c5d841eca4f1ca445926f7c3",
+      "End": "9c8910d4da6c4dd8ae8e8321de1a62b1",
+      "Id": "a1f5da3a4bbe45eeaba225c92270ba2a",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "3737a5d3c5d841eca4f1ca445926f7c3",
+      "End": "6bd41aad61e24b228a80e0172909ffa0",
+      "Id": "a3f46a15a333438c8750857b3b9bbe1c",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "c9bab012bb91436a91c7fcd950f40d21",
+      "End": "392c53d102d84989bf47ce223e05f987",
+      "Id": "362721445e6d454e98f86763d5f5d9af",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "c9bab012bb91436a91c7fcd950f40d21",
+      "End": "97088e757fea4d64abed75777f61b08d",
+      "Id": "99d2bb8de0cf4f02b24d3dcecf0109ed",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "e14efe8e00d64963a776f88f38090f6d",
+      "End": "cdbbd91a6541417ca7cab382214477d7",
+      "Id": "cd65ae0469a04fd0a1774c51aba75e8c",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "EnableLegacyPolyCurveBehavior": null,
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "3.6",
+      "Data": {}
+    },
+    {
+      "ExtensionGuid": "DFBD9CC0-DB40-457A-939E-8C8555555A9D",
+      "Name": "Generative Design",
+      "Version": "9.1",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "3.6.1.9895",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "_Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Id": "10b16069077444bbbf8b113fdf7c4fc2",
+        "Name": "Python Script",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 147.68116943846996,
+        "Y": 99.54267700384946
+      },
+      {
+        "Id": "06752190b9d34accae52145e4064a3a4",
+        "Name": "Watch",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 485.4573229961504,
+        "Y": -102.24476928846389
+      },
+      {
+        "Id": "07e0a38ca734424c9f5441bfdefa92ce",
+        "Name": "Python Script",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 514.0,
+        "Y": 199.0
+      },
+      {
+        "Id": "e22ec214949f4e579cf7d90ec7a27cc7",
+        "Name": "Watch",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 832.7793382221091,
+        "Y": -132.56068045988744
+      },
+      {
+        "Id": "c6201253c25a41d2924eb63332d9aa43",
+        "Name": "Python Script",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 911.4396427720463,
+        "Y": 340.5454874378954
+      },
+      {
+        "Id": "2ade6c71b4354e549c38dff29b4cbdde",
+        "Name": "Watch",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 1190.3997843202162,
+        "Y": 338.2227122386698
+      }
+    ],
+    "Annotations": [],
+    "X": -80.01266873621387,
+    "Y": 128.79292881725107,
+    "Zoom": 0.8506851328903655
+  }
+}
